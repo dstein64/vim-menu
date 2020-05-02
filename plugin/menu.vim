@@ -7,7 +7,7 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 if !exists(':Menu')
-  command Menu :call menu#Menu()
+  command -nargs=? -complete=menu Menu :call menu#Menu(<q-args>)
 endif
 
 let &cpo = s:save_cpo
