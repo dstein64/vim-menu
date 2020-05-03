@@ -10,5 +10,11 @@ if !exists(':Menu')
   command -nargs=? -complete=menu Menu :call menu#Menu(<q-args>)
 endif
 
+" ************************************************************
+" * User Configuration
+" ************************************************************
+
+let g:menu_debug_mode = get(g:, 'menu_debug_mode', 0)
+
 let &cpo = s:save_cpo
 unlet s:save_cpo

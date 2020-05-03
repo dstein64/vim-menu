@@ -14,8 +14,17 @@ function! s:Qualify(path) abort
   return join(l:path, '.')
 endfunction
 
-" Given a qualified name, return a menu item path (as a List)
+" Given a qualified name, return a menu item path (as a List). Underlying
+" parts are not escaped.
 function! s:Unqualify(qualified) abort
+  " Replace '\.' with a tab char, which will be (partially*) reverted later.
+  " This works because unescaped tabs don't work in menu names.
+  " * 'partially' since tabs are later converted to '.' (unescaped), not '\.'.
+  let l:encoded = substitute(a:qualified, '\\\.', "\t", 'g')
+  let l:parts = split(l:encoded, '\.')
+  call map(l:parts, 'substitute(v:val, "\t", ''\.'', "g")')
+  call map(l:parts, 'substitute(v:val, ''\\ '', " ", "g")')
+  return l:parts
 endfunction
 
 " Given a menu item path, return the submenu items.
@@ -50,21 +59,29 @@ function! s:GetMenuItems(path) abort
   return l:items
 endfunction
 
-" Show the specified menu, of if this a menu item, then execute.
+" Show the specified menu, or if this a menu item, then execute.
 function! s:ShowMenu(path) abort
-  " TODO: clear any existing menus
+  " TODO: clear any existing menus (or possibly do this when items are
+  " selected)
   let l:items = s:GetMenuItems(a:path)
   if len(l:items) ==# 0
-    if execute('nmenu ' . a:path) =~# ' <Nop>$'
-      throw 'Cannot execute command: ' . a:path
+    if execute('nmenu ' . a:path) =~# '\n *[^ ]\+ \+<Nop>$'
+      throw 'Cannot execute menu item: ' . a:path
     endif
-    execute 'nmenu ' . a:path
     execute 'emenu ' . a:path
     return
   endif
-  " Exclude ToolBar, PopUp, and TouchBar from the top level menu.
-  let l:exclusions = ['ToolBar', 'PopUp', 'TouchBar']
-  call filter(l:items, 'index(l:exclusions, v:val.name) ==# -1')
+  let l:parts = s:Unqualify(a:path)
+  let l:title = 'Menu'
+  if len(l:parts) ># 0
+    let l:title .= ' | ' . join(l:parts, ' > ')
+  endif
+  echo l:title
+  if len(l:parts) ># 0
+    " Exclude ToolBar, PopUp, and TouchBar from the top level menu.
+    let l:exclusions = ['ToolBar', 'PopUp', 'TouchBar']
+    call filter(l:items, 'index(l:exclusions, v:val.name) ==# -1')
+  endif
   for l:item in l:items
     echo l:item
   endfor
@@ -83,6 +100,9 @@ function! menu#Menu(path) abort
   try
     call s:ShowMenu(a:path)
   catch
+    if g:menu_debug_mode
+      echohl ErrorMsg | echo v:throwpoint | echohl None
+    endif
     echohl ErrorMsg | echo v:exception | echohl None
     call s:Beep()
   endtry
