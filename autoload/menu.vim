@@ -6,6 +6,11 @@
 " for styling, etc.
 " TODO: Add titles to the menu (e.g., File, Edit, Edit > Find)
 
+" XXX: When preparing and updating menus, there are redundant calls to :nmenu.
+" This approach is simpler and more readable than calling and parsing once,
+" and there are no noticeable performance implications when used with the
+" default menu.
+
 " Given a menu item path (as a List), return its qualified name.
 function! s:Qualify(path) abort
   let l:path = a:path[:]
@@ -27,6 +32,16 @@ function! s:Unqualify(qualified) abort
   return l:parts
 endfunction
 
+" Returns true if the specified path corresponds to a leaf.
+function! s:IsLeaf(path) abort
+  " Leaf items have 3 lines: "--- Menus ---", parent, command
+  return len(split(execute('nmenu ' . a:path), '\n')) ==# 3
+endfunction
+
+function! s:IsSeparator(name) abort
+  return a:name =~# '^-.*-$'
+endfunction
+
 " Given a menu item path, return the submenu items.
 function! s:GetMenuItems(path) abort
   let l:text = execute('nmenu ' . a:path)
@@ -44,44 +59,69 @@ function! s:GetMenuItems(path) abort
     if l:amp_idx !=# -1
       let l:name = substitute(l:name, '&', '', '')
     endif
-    let l:qualified = s:Qualify([l:name])
+    let l:path2 = s:Qualify([l:name])
     if len(a:path) ># 0
-      let l:qualified = a:path . '.' . l:qualified
+      let l:path2 = a:path . '.' . l:path2
     endif
     let l:item = {
           \   'name': l:name,
           \   'subname': l:subname,
-          \   'qualified': l:qualified,
+          \   'path': l:path2,
           \   'amp_idx': l:amp_idx,
+          \   'is_leaf': s:IsLeaf(l:path2),
+          \   'is_separator': s:IsSeparator(l:name),
           \ }
     call add(l:items, l:item)
   endfor
   return l:items
 endfunction
 
-" Show the specified menu, or if this a menu item, then execute.
+" Returns true if all leaves under the specified path are <Nop>.
+function! s:AllNops(path) abort
+  let l:text = execute('nmenu ' . a:path)
+  let l:lines = split(l:text, '\n')
+  for l:line in l:lines
+    " This pattern matches lines with commands.
+    let cmd_pattern = '^ \+n[^-]* \+[^ ]\+'
+    if l:line =~# cmd_pattern && l:line !~# '<Nop>$'
+      return 0
+    endif
+  endfor
+  return 1
+endfunction
+
+" Remove invalid and/or unsuitable items.
+function! s:FilterMenuItems(items, root) abort
+  let l:items = a:items[:]
+  if a:root
+    " Exclude ToolBar, PopUp, and TouchBar from the root menu.
+    let l:exclusions = ['ToolBar', 'PopUp', 'TouchBar']
+    call filter(l:items, 'index(l:exclusions, v:val.name) ==# -1')
+  endif
+  let l:IsSep = {item -> s:IsSeparator(item.name)}
+  " Exlude non-separator entries that only have <Nop> subitems.
+  call filter(l:items, 'l:IsSep(v:val) || !s:AllNops(v:val.path)')
+  " Drop consecutive separators and separators on the boundary.
+  " TODO: have to drop consecutive seps, and seps on the boundary.
+  return l:items
+endfunction
+
+" Show the specified menu, or if the item is a leaf node, then execute.
 function! s:ShowMenu(path) abort
   " TODO: clear any existing menus (or possibly do this when items are
   " selected)
-  let l:items = s:GetMenuItems(a:path)
-  if len(l:items) ==# 0
-    if execute('nmenu ' . a:path) =~# '\n *[^ ]\+ \+<Nop>$'
-      throw 'Cannot execute menu item: ' . a:path
-    endif
-    execute 'emenu ' . a:path
-    return
+  if s:IsLeaf(a:path)
+    throw 'No menu: ' . a:path
   endif
   let l:parts = s:Unqualify(a:path)
+  let l:items = s:GetMenuItems(a:path)
+  let l:items = s:FilterMenuItems(l:items, len(l:parts) ==# 0)
   let l:title = 'Menu'
   if len(l:parts) ># 0
     let l:title .= ' | ' . join(l:parts, ' > ')
   endif
+  " TODO: delete echo below
   echo l:title
-  if len(l:parts) ># 0
-    " Exclude ToolBar, PopUp, and TouchBar from the top level menu.
-    let l:exclusions = ['ToolBar', 'PopUp', 'TouchBar']
-    call filter(l:items, 'index(l:exclusions, v:val.name) ==# -1')
-  endif
   for l:item in l:items
     echo l:item
   endfor
@@ -92,18 +132,22 @@ function! s:Beep() abort
 endfunction
 
 function! menu#Menu(path) abort
-  if mode() !=# 'n'
-    call s:Beep()
-    return
-  endif
-  silent! source $VIMRUNTIME/menu.vim
   try
-    call s:ShowMenu(a:path)
+    if mode() !=# 'n'
+      throw 'Menu only available in normal mode'
+    endif
+    silent! source $VIMRUNTIME/menu.vim
+    let l:path = a:path
+    " Remove trailing dot if present (inserted by -complete=menu)
+    if l:path =~# '\.$' && l:path !~# '\\\.$'
+      let l:path = l:path[:-2]
+    endif
+    call s:ShowMenu(l:path)
   catch
     if g:menu_debug_mode
       echohl ErrorMsg | echo v:throwpoint | echohl None
     endif
-    echohl ErrorMsg | echo v:exception | echohl None
+    echohl ErrorMsg | echo 'vim-menu: ' . v:exception | echohl None
     call s:Beep()
   endtry
 endfunction
