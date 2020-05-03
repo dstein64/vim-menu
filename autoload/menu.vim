@@ -102,8 +102,22 @@ function! s:FilterMenuItems(items, root) abort
   " Exlude non-separator entries that only have <Nop> subitems.
   call filter(l:items, 'l:IsSep(v:val) || !s:AllNops(v:val.path)')
   " Drop consecutive separators and separators on the boundary.
-  " TODO: have to drop consecutive seps, and seps on the boundary.
-  return l:items
+  let l:items2 = []
+  let l:len = len(l:items)
+  for l:idx in range(l:len)
+    let l:item = l:items[l:idx]
+    let l:is_sep = l:item.is_separator
+    " Don't add separators to the beginning of the list
+    if len(l:items2) ==# 0 && l:is_sep | continue | endif
+    " Don't add a separator if the next element is a separator
+    if l:is_sep && l:idx + 1 <# l:len && l:items[l:idx + 1].is_separator
+      continue
+    endif
+    " Don't add a separator to the end
+    if l:is_sep && l:idx + 1 ==# l:len | continue | endif
+    call add(l:items2, l:item)
+  endfor
+  return l:items2
 endfunction
 
 " Show the specified menu, or if the item is a leaf node, then execute.
