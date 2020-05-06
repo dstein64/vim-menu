@@ -1,9 +1,5 @@
 " TODO: add handling for -sep-
-" TODO: popup menu that shows menu items. Maybe use built-in popup
-" functionality.
 " TODO: make sure you're always using the right :menu (e.g., :nmenu)
-" TODO: Vim's popup_menu() probably won't be sufficient, but it's a good idea
-" for styling, etc.
 " TODO: Add titles to the menu (e.g., File, Edit, Edit > Find)
 
 " XXX: When preparing and updating menus, there are redundant calls to :nmenu.
@@ -134,11 +130,27 @@ function! s:ShowMenu(path) abort
   if len(l:parts) ># 0
     let l:title .= ' | ' . join(l:parts, ' > ')
   endif
-  " TODO: delete echo below
-  echo l:title
+  botright split +enew
+  let &l:statusline = l:title
+
+  " TODO: delete
+  " Example l:items
+  "{'is_leaf': 0, 'is_separator': 0, 'name': 'File', 'amp_idx': 0, 'subname': '', 'path': 'File'}
+  "{'is_leaf': 0, 'is_separator': 0, 'name': 'Edit', 'amp_idx': 0, 'subname': '', 'path': 'Edit'}
+  "{'is_leaf': 0, 'is_separator': 0, 'name': 'Tools', 'amp_idx': 0, 'subname': '', 'path': 'Tools'}
+  "{'is_leaf': 0, 'is_separator': 0, 'name': 'Syntax', 'amp_idx': 0, 'subname': '', 'path': 'Syntax'}
+  "{'is_leaf': 0, 'is_separator': 0, 'name': 'Buffers', 'amp_idx': 0, 'subname': '', 'path': 'Buffers'}
+  "{'is_leaf': 0, 'is_separator': 0, 'name': 'Dan', 'amp_idx': -1, 'subname': '', 'path': 'Dan'}
+  "{'is_leaf': 0, 'is_separator': 0, 'name': 'Window', 'amp_idx': -1, 'subname': '', 'path': 'Window'}
+  "{'is_leaf': 0, 'is_separator': 0, 'name': 'Help', 'amp_idx': 0, 'subname': '', 'path': 'Help'}
+
   for l:item in l:items
-    echo l:item
+    let l:line = l:item.name
+    call append(line('$') - 1, l:line)
   endfor
+  setlocal scrolloff=0
+  normal! Gddgg
+  execute 'resize ' . line('$')
 endfunction
 
 function! s:Beep() abort
