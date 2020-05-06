@@ -116,6 +116,24 @@ function! s:FilterMenuItems(items, root) abort
   return l:items2
 endfunction
 
+function! s:GetChar()
+  try
+    while 1
+      let l:char = getchar()
+      if v:mouse_win ># 0 | continue | endif
+      if l:char ==# "\<CursorHold>" | continue | endif
+      break
+    endwhile
+  catch
+    " E.g., <c-c>
+    let l:char = char2nr("\<esc>")
+  endtry
+  if type(l:char) ==# v:t_number
+    let l:char = nr2char(l:char)
+  endif
+  return l:char
+endfunction
+
 " Show the specified menu, or if the item is a leaf node, then execute.
 function! s:ShowMenu(path) abort
   " TODO: clear any existing menus (or possibly do this when items are
@@ -130,6 +148,8 @@ function! s:ShowMenu(path) abort
   if len(l:parts) ># 0
     let l:title .= ' | ' . join(l:parts, ' > ')
   endif
+  " TODO: reuse existing buffer so that usage doesn't make the buffer list
+  " numbers get high. As part of this, make the buffer read-only and hidden...
   botright split +enew
   let &l:statusline = l:title
 
@@ -145,12 +165,29 @@ function! s:ShowMenu(path) abort
   "{'is_leaf': 0, 'is_separator': 0, 'name': 'Help', 'amp_idx': 0, 'subname': '', 'path': 'Help'}
 
   for l:item in l:items
-    let l:line = l:item.name
+    let l:line = '  ' . l:item.name
     call append(line('$') - 1, l:line)
   endfor
   setlocal scrolloff=0
-  normal! Gddgg
+  setlocal cursorline
+  setlocal nonumber norelativenumber
+  normal! Gddgg0
   execute 'resize ' . line('$')
+  echo '  vim-menu'
+  while 1
+    redraw
+    let l:char = s:GetChar()
+    if l:char ==# "\<esc>"
+      break
+    elseif l:char ==# 'j'
+      normal! j
+    elseif l:char ==# 'k'
+      normal! k
+    endif
+  endwhile
+  bdelete!
+  " TODO: Will have to execute command here, after bdelete.
+  echo
 endfunction
 
 function! s:Beep() abort
