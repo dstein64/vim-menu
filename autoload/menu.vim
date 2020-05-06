@@ -116,6 +116,26 @@ function! s:FilterMenuItems(items, root) abort
   return l:items2
 endfunction
 
+" Attach an ID to menu items. IDs start at 1 and increment for non-separators.
+" IDs start at -1 and decrement for non-separators.
+function! s:AttachId(items)
+  let l:items = a:items[:]
+  let l:id = 1
+  let l:sep_id = -1
+  for l:item in l:items
+    let l:is_sep = l:item.is_separator
+    let l:item.id = l:is_sep ? l:sep_id : l:id
+    if is_sep
+      let l:item.id = l:sep_id
+      let l:sep_id -= 1
+    else
+      let l:item.id = l:id
+      let l:id += 1
+    endif
+  endfor
+  return l:items
+endfunction
+
 function! s:GetChar()
   try
     while 1
@@ -144,6 +164,7 @@ function! s:ShowMenu(path) abort
   let l:parts = s:Unqualify(a:path)
   let l:items = s:GetMenuItems(a:path)
   let l:items = s:FilterMenuItems(l:items, len(l:parts) ==# 0)
+  let l:items = s:AttachId(l:items)
   let l:title = 'Menu'
   if len(l:parts) ># 0
     let l:title .= ' | ' . join(l:parts, ' > ')
@@ -155,6 +176,7 @@ function! s:ShowMenu(path) abort
 
   " TODO: delete
   " Example l:items
+  " Added an 'id' field too.
   "{'is_leaf': 0, 'is_separator': 0, 'name': 'File', 'amp_idx': 0, 'subname': '', 'path': 'File'}
   "{'is_leaf': 0, 'is_separator': 0, 'name': 'Edit', 'amp_idx': 0, 'subname': '', 'path': 'Edit'}
   "{'is_leaf': 0, 'is_separator': 0, 'name': 'Tools', 'amp_idx': 0, 'subname': '', 'path': 'Tools'}
@@ -164,8 +186,11 @@ function! s:ShowMenu(path) abort
   "{'is_leaf': 0, 'is_separator': 0, 'name': 'Window', 'amp_idx': -1, 'subname': '', 'path': 'Window'}
   "{'is_leaf': 0, 'is_separator': 0, 'name': 'Help', 'amp_idx': 0, 'subname': '', 'path': 'Help'}
 
+  " The last item can't be a separator, so don't have to handle the different
+  " indexing used for separators.
+  let l:id_pad = len(string(l:items[-1].id))
   for l:item in l:items
-    let l:line = '  ' . l:item.name
+    let l:line = printf('%*s ', l:id_pad, l:item.id) . l:item.name
     call append(line('$') - 1, l:line)
   endfor
   setlocal scrolloff=0
@@ -176,6 +201,8 @@ function! s:ShowMenu(path) abort
   echo '  vim-menu'
   while 1
     redraw
+    " TODO: more chars: d, u, f, b, G, gg, numbers, control chars, arrows,
+    " H, M, L, h (back), l (select), <cr>, <space>?
     let l:char = s:GetChar()
     if l:char ==# "\<esc>"
       break
