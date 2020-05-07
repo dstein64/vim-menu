@@ -1,6 +1,7 @@
 " TODO: add an option to use popup/float windows
 " TODO: make sure you're always using the right :menu (e.g., :nmenu)
 " TODO: Add titles to the menu (e.g., File, Edit, Edit > Find)
+" TODO: Have to add a character to show whether an item is a leaf or not.
 
 " XXX: When preparing and updating menus, there are redundant calls to :nmenu.
 " This approach is simpler and more readable than calling and parsing once,
@@ -11,6 +12,11 @@ let s:down_chars = ['j', "\<down>"]
 let s:up_chars = ['k', "\<up>"]
 let s:back_chars = ['h', "\<left>"]
 let s:select_chars = ['l', "\<right>", "\<cr>", "\<space>"]
+
+" Action types for ShowMenu()
+let s:exit_action = 1
+let s:select_action = 2
+let s:back_action = 3
 
 " Given a menu item path (as a List), return its qualified name.
 function! s:Qualify(path) abort
@@ -163,8 +169,8 @@ function! s:Contains(list, element) abort
   return index(a:list, a:element) !=# -1
 endfunction
 
-" Show the specified menu, or if the item is a leaf node, then execute.
-function! s:ShowMenu(path) abort
+" Show the specified menu, with the specified item selected.
+function! s:ShowMenu(path, id) abort
   " TODO: temporarilty set state (e.g., no hlsearch)
   " TODO: clear any existing menus (or possibly do this when items are
   " selected)
@@ -182,6 +188,10 @@ function! s:ShowMenu(path) abort
   " TODO: reuse existing buffer so that usage doesn't make the buffer list
   " numbers get high. As part of this, make the buffer read-only and hidden...
   botright split +enew
+  setlocal scrolloff=0
+  setlocal signcolumn=no
+  setlocal nocursorline
+  setlocal nonumber norelativenumber
   let &l:statusline = l:title
 
   " TODO: delete
@@ -199,18 +209,18 @@ function! s:ShowMenu(path) abort
   " The last item can't be a separator, so don't have to handle the different
   " indexing used for separators.
   let l:id_pad = len(string(l:items[-1].id))
+  let l:selected_line = 1
   for l:item in l:items
     let l:line = printf('%*s ', l:id_pad, l:item.id) . l:item.name
     if l:item.is_separator | let l:line = '' | endif
+    if l:item.id ==# a:id | let l:selected_line = line('$') | endif
     call append(line('$') - 1, l:line)
   endfor
   normal! Gddgg0
-  setlocal scrolloff=0
-  setlocal signcolumn=no
-  setlocal nocursorline
-  setlocal nonumber norelativenumber
   execute 'resize ' . line('$')
+  execute 'normal! ' . l:selected_line . 'G'
   echo '  vim-menu'
+  let l:action = {}
   while 1
     sign unplace 1
     let l:line_before = line('.')
@@ -220,17 +230,19 @@ function! s:ShowMenu(path) abort
     " TODO: more chars: numbers, control chars (q for quit)
     let l:char = s:GetChar()
     if l:char ==# "\<esc>"
+      let l:action.type = s:exit_action
       break
     elseif s:Contains(s:down_chars, l:char)
       normal! j
     elseif s:Contains(s:up_chars, l:char)
       normal! k
     elseif s:Contains(s:back_chars, l:char)
-      " TODO: back
-      echo "TODO"
+      let l:action.type = s:back_action
+      break
     elseif s:Contains(s:select_chars, l:char)
-      " TODO: select
-      echo "TODO"
+      let l:action.type = s:select_action
+      let l:action.selection = l:items[l:line_before - 1]
+      break
     elseif l:char ==# 'd'
       execute "normal! \<c-d>"
     elseif l:char ==# 'u'
@@ -252,8 +264,7 @@ function! s:ShowMenu(path) abort
     endif
   endwhile
   bdelete!
-  " TODO: Will have to execute command here, after bdelete.
-  echo
+  return l:action
 endfunction
 
 function! s:Beep() abort
@@ -271,7 +282,30 @@ function! menu#Menu(path) abort
     if l:path =~# '\.$' && l:path !~# '\\\.$'
       let l:path = l:path[:-2]
     endif
-    call s:ShowMenu(l:path)
+    let l:selection_ids = []
+    let l:selection_id = 1
+    while 1
+      let l:action = s:ShowMenu(l:path, l:selection_id)
+      if l:action.type ==# s:exit_action
+        break
+      elseif l:action.type ==# s:select_action
+        if l:action.selection.is_leaf
+          execute 'emenu ' . l:action.selection.path
+          break
+        else
+          let l:path = l:action.selection.path
+          call add(l:selection_ids, l:action.selection.id)
+          let l:selection_id = 1
+        endif
+      elseif l:action.type ==# s:back_action
+        if l:path ==# '' | break | endif
+        let l:parts = s:Unqualify(l:path)
+        let l:path = s:Qualify(l:parts[:-2])
+        let l:selection_id = remove(l:selection_ids, -1)
+      else
+        throw 'Unsupported action'
+      endif
+    endwhile
   catch
     if g:menu_debug_mode
       echohl ErrorMsg | echo v:throwpoint | echohl None
