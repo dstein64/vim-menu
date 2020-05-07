@@ -1,4 +1,3 @@
-" TODO: add handling for -sep-
 " TODO: add an option to use popup/float windows
 " TODO: make sure you're always using the right :menu (e.g., :nmenu)
 " TODO: Add titles to the menu (e.g., File, Edit, Edit > Find)
@@ -202,13 +201,14 @@ function! s:ShowMenu(path) abort
   let l:id_pad = len(string(l:items[-1].id))
   for l:item in l:items
     let l:line = printf('%*s ', l:id_pad, l:item.id) . l:item.name
+    if l:item.is_separator | let l:line = '' | endif
     call append(line('$') - 1, l:line)
   endfor
+  normal! Gddgg0
   setlocal scrolloff=0
   setlocal signcolumn=no
   setlocal nocursorline
   setlocal nonumber norelativenumber
-  normal! Gddgg0
   execute 'resize ' . line('$')
   echo '  vim-menu'
   while 1
