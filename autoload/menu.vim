@@ -6,6 +6,8 @@
 " be (for the RHS text).
 " TODO: Create a syntax rule so that the :sign highlighting doesn't extend too
 " far. See $VIMRUNTIME/syntax/colortest.vim.
+" TODO: Surround numbers in []. Color numbers, and possibly use colors to
+" indicate leaf or submenu.
 
 " XXX: When preparing and updating menus, there are redundant calls to :nmenu.
 " This approach is simpler and more readable than calling and parsing once,
@@ -21,6 +23,9 @@ let s:select_chars = ['l', "\<right>", "\<cr>", "\<space>"]
 let s:exit_action = 1
 let s:select_action = 2
 let s:back_action = 3
+
+" Exclude ToolBar, PopUp, and TouchBar from the root menu.
+let s:root_exclusions = ['ToolBar', 'PopUp', 'TouchBar']
 
 " Given a menu item path (as a List), return its qualified name.
 function! s:Qualify(path) abort
@@ -105,9 +110,7 @@ endfunction
 function! s:FilterMenuItems(items, root) abort
   let l:items = a:items[:]
   if a:root
-    " Exclude ToolBar, PopUp, and TouchBar from the root menu.
-    let l:exclusions = ['ToolBar', 'PopUp', 'TouchBar']
-    call filter(l:items, 'index(l:exclusions, v:val.name) ==# -1')
+    call filter(l:items, 'index(s:root_exclusions, v:val.name) ==# -1')
   endif
   let l:IsSep = {item -> s:IsSeparator(item.name)}
   " Exlude non-separator entries that only have <Nop> subitems.
@@ -307,6 +310,10 @@ function! menu#Menu(path) abort
         let l:path = s:Qualify(l:parts[:-2])
         if len(l:selection_ids) ># 0
           let l:selection_id = remove(l:selection_ids, -1)
+        elseif len(l:parts) ==# 1 && s:Contains(s:root_exclusions, l:parts[0])
+          " For items excluded from the root menu, don't go back to the root
+          " menu.
+          break
         else
           let l:selection_id = 1
         endif
