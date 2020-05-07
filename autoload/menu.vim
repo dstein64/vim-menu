@@ -166,6 +166,7 @@ endfunction
 
 " Show the specified menu, or if the item is a leaf node, then execute.
 function! s:ShowMenu(path) abort
+  " TODO: temporarilty set state (e.g., no hlsearch)
   " TODO: clear any existing menus (or possibly do this when items are
   " selected)
   if s:IsLeaf(a:path)
@@ -204,15 +205,19 @@ function! s:ShowMenu(path) abort
     call append(line('$') - 1, l:line)
   endfor
   setlocal scrolloff=0
-  setlocal cursorline
+  setlocal signcolumn=no
+  setlocal nocursorline
   setlocal nonumber norelativenumber
   normal! Gddgg0
   execute 'resize ' . line('$')
   echo '  vim-menu'
   while 1
-    redraw
+    sign unplace 1
     let l:line_before = line('.')
-    " TODO: more chars: numbers, control chars
+    execute printf('sign place 1 line=%s name=menu_selected buffer=%s',
+          \ l:line_before, bufnr('%'))
+    redraw
+    " TODO: more chars: numbers, control chars (q for quit)
     let l:char = s:GetChar()
     if l:char ==# "\<esc>"
       break
