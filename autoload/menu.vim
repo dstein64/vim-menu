@@ -7,6 +7,11 @@
 " and there are no noticeable performance implications when used with the
 " default menu.
 
+let s:down_chars = ['j', "\<down>"]
+let s:up_chars = ['k', "\<up>"]
+let s:back_chars = ['h', "\<left>"]
+let s:select_chars = ['l', "\<right>", "\<cr>", "\<space>"]
+
 " Given a menu item path (as a List), return its qualified name.
 function! s:Qualify(path) abort
   let l:path = a:path[:]
@@ -154,6 +159,10 @@ function! s:GetChar()
   return l:char
 endfunction
 
+function! s:Contains(list, element) abort
+  return index(a:list, a:element) !=# -1
+endfunction
+
 " Show the specified menu, or if the item is a leaf node, then execute.
 function! s:ShowMenu(path) abort
   " TODO: clear any existing menus (or possibly do this when items are
@@ -201,15 +210,39 @@ function! s:ShowMenu(path) abort
   echo '  vim-menu'
   while 1
     redraw
-    " TODO: more chars: d, u, f, b, G, gg, numbers, control chars, arrows,
-    " H, M, L, h (back), l (select), <cr>, <space>?
+    let l:line_before = line('.')
+    " TODO: more chars: numbers, control chars
     let l:char = s:GetChar()
     if l:char ==# "\<esc>"
       break
-    elseif l:char ==# 'j'
+    elseif s:Contains(s:down_chars, l:char)
       normal! j
-    elseif l:char ==# 'k'
+    elseif s:Contains(s:up_chars, l:char)
       normal! k
+    elseif s:Contains(s:back_chars, l:char)
+      " TODO: back
+      echo "TODO"
+    elseif s:Contains(s:select_chars, l:char)
+      " TODO: select
+      echo "TODO"
+    elseif l:char ==# 'd'
+      execute "normal! \<c-d>"
+    elseif l:char ==# 'u'
+      execute "normal! \<c-u>"
+    elseif l:char ==# 'g'
+      normal! gg
+    elseif s:Contains(['G', 'H', 'M', 'L'], l:char)
+      execute 'normal! ' . l:char
+    endif
+    let l:line_after = line('.')
+    " Skip separators. Running this once assumes no consecutive separators,
+    " which is imposed above.
+    if l:items[l:line_after - 1].is_separator
+      if l:line_after - l:line_before ># 0
+        normal! j
+      else
+        normal! k
+      endif
     endif
   endwhile
   bdelete!
