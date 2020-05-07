@@ -1,4 +1,5 @@
 " TODO: add handling for -sep-
+" TODO: add an option to use popup/float windows
 " TODO: make sure you're always using the right :menu (e.g., :nmenu)
 " TODO: Add titles to the menu (e.g., File, Edit, Edit > Find)
 
