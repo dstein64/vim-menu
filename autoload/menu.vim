@@ -2,6 +2,10 @@
 " TODO: make sure you're always using the right :menu (e.g., :nmenu)
 " TODO: Add titles to the menu (e.g., File, Edit, Edit > Find)
 " TODO: Have to add a character to show whether an item is a leaf or not.
+" TODO: Get the longest name in :nmenu to figure out how wide the text should
+" be (for the RHS text).
+" TODO: Create a syntax rule so that the :sign highlighting doesn't extend too
+" far. See $VIMRUNTIME/syntax/colortest.vim.
 
 " XXX: When preparing and updating menus, there are redundant calls to :nmenu.
 " This approach is simpler and more readable than calling and parsing once,
@@ -301,7 +305,11 @@ function! menu#Menu(path) abort
         if l:path ==# '' | break | endif
         let l:parts = s:Unqualify(l:path)
         let l:path = s:Qualify(l:parts[:-2])
-        let l:selection_id = remove(l:selection_ids, -1)
+        if len(l:selection_ids) ># 0
+          let l:selection_id = remove(l:selection_ids, -1)
+        else
+          let l:selection_id = 1
+        endif
       else
         throw 'Unsupported action'
       endif
