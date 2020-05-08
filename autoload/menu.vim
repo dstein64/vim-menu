@@ -257,7 +257,7 @@ function! s:ShowMenu(path, id) abort
       execute "normal! \<c-u>"
     elseif l:char ==# 'g'
       normal! gg
-    elseif s:Contains(['G', 'H', 'M', 'L'], l:char)
+    elseif s:Contains(['G', 'H', 'M', 'L', '{', '}'], l:char)
       execute 'normal! ' . l:char
     endif
     let l:line_after = line('.')
