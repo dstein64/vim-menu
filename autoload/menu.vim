@@ -6,8 +6,7 @@
 " be (for the RHS text).
 " TODO: Create a syntax rule so that the :sign highlighting doesn't extend too
 " far. See $VIMRUNTIME/syntax/colortest.vim.
-" TODO: Surround numbers in []. Color numbers, and possibly use colors to
-" indicate leaf or submenu.
+" TODO: Use colors to indicate leaf or submenu.
 
 " XXX: When preparing and updating menus, there are redundant calls to :nmenu.
 " This approach is simpler and more readable than calling and parsing once,
@@ -199,6 +198,7 @@ function! s:ShowMenu(path, id) abort
   setlocal signcolumn=no
   setlocal nocursorline
   setlocal nonumber norelativenumber
+  setlocal filetype=menu
   let &l:statusline = l:title
 
   " TODO: delete
@@ -215,10 +215,11 @@ function! s:ShowMenu(path, id) abort
 
   " The last item can't be a separator, so don't have to handle the different
   " indexing used for separators.
-  let l:id_pad = len(string(l:items[-1].id))
+  let l:id_len = len(string(l:items[-1].id))
   let l:selected_line = 1
   for l:item in l:items
-    let l:line = printf('%*s ', l:id_pad, l:item.id) . l:item.name
+    let l:id_pad = l:id_len - len(string(l:item.id))
+    let l:line = printf('%*s[%s] ', l:id_pad, '', l:item.id) . l:item.name
     if l:item.is_separator | let l:line = '' | endif
     if l:item.id ==# a:id | let l:selected_line = line('$') | endif
     call append(line('$') - 1, l:line)

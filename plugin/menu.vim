@@ -27,6 +27,7 @@ let g:menu_debug_mode = get(g:, 'menu_debug_mode', 0)
 " item.
 " :highlight WinInactive term=bold ctermfg=12 ctermbg=159 guifg=Blue guibg=LightCyan
 highlight default link MenuSelected Search
+highlight default link MenuId LineNr
 
 let &cpo = s:save_cpo
 unlet s:save_cpo
