@@ -56,42 +56,58 @@ function! s:IsSeparator(name) abort
   return a:name =~# '^-.*-$'
 endfunction
 
-" Given a menu item path, return the submenu items.
-function! s:GetMenuItems(path) abort
-  let l:text = execute('nmenu ' . a:path)
-  let l:lines = split(l:text, '\n')
-  let l:pattern =  'v:val =~# "^\\d"'
-  if len(a:path) ># 0
-    let l:pattern = 'v:val =~# "^  \\d"'
-  endif
-  call filter(l:lines, l:pattern)
-  let l:items = []
+function! s:ParseMenu() abort
+  let l:lines = split(execute('nmenu'), '\n')[1:]
+  let l:depth = -1
+  let l:output = {}
+  let l:stack = [{'children': []}]
   for l:line in l:lines
-    let l:full_name = l:line[matchstrpos(l:line, ' *\d\+ ')[2]:]
-    let [l:name, l:subname; l:_] = split(l:full_name, '\^I\|$', 1)
-    let l:amp_idx = stridx(l:name, '&')
-    if l:amp_idx !=# -1
-      let l:name = substitute(l:name, '&', '', '')
+    if l:line =~# '^ *\d'
+      let l:depth2 = len(matchstr(l:line, '^ *')) / 2
+      if l:depth2 <=# l:depth
+        for l:x in range(l:depth - l:depth2 + 1)
+          call remove(l:stack, -1)
+        endfor
+      endif
+      let l:full_name = l:line[matchstrpos(l:line, ' *\d\+ ')[2]:]
+      let [l:name, l:subname; l:_] = split(l:full_name, '\^I\|$', 1)
+      let l:amp_idx = stridx(l:name, '&')
+      if l:amp_idx !=# -1
+        let l:name = substitute(l:name, '&', '', '')
+      endif
+      let l:is_separator = l:name =~# '^-.*-$'
+      let l:parents = []
+      for l:parent in l:stack[1:]
+        call add(l:parents, l:parent.name)
+      endfor
+      let l:path = s:Qualify(l:parents + [l:name])
+      let l:item = {
+            \   'name': l:name,
+            \   'subname': l:subname,
+            \   'path': l:path,
+            \   'amp_idx': l:amp_idx,
+            \   'children': [],
+            \   'is_separator': l:is_separator,
+            \ }
+      call add(l:stack[-1]['children'], l:item)
+      call add(l:stack, l:item)
+      let l:output[l:path] = l:item
+      let l:depth = l:depth2
+    else
     endif
-    let l:path2 = s:Qualify([l:name])
-    if len(a:path) ># 0
-      let l:path2 = a:path . '.' . l:path2
-    endif
-    let l:item = {
-          \   'name': l:name,
-          \   'subname': l:subname,
-          \   'path': l:path2,
-          \   'amp_idx': l:amp_idx,
-          \   'is_leaf': s:IsLeaf(l:path2),
-          \   'is_separator': s:IsSeparator(l:name),
-          \ }
-    call add(l:items, l:item)
   endfor
-  return l:items
+  let l:output[''] = l:stack[0]
+  return l:output
+endfunction
+
+" Given a parsed menu and an item path, return the submenu items.
+function! s:GetMenuItems(parsed, path) abort
+  return s:ParseMenu()[a:path].children
 endfunction
 
 " Returns true if all leaves under the specified path are <Nop>.
 function! s:AllNops(path) abort
+  return 0
   let l:text = execute('nmenu ' . a:path)
   let l:lines = split(l:text, '\n')
   for l:line in l:lines
@@ -179,9 +195,10 @@ function! s:ShowMenu(path, id) abort
   " TODO: temporarilty set state (e.g., no hlsearch)
   " TODO: clear any existing menus (or possibly do this when items are
   " selected)
-  if s:IsLeaf(a:path)
-    throw 'No menu: ' . a:path
-  endif
+  " TODO: REAL IsLeaf Here
+  "if s:IsLeaf(a:path)
+  "  throw 'No menu: ' . a:path
+  "endif
   let l:parts = s:Unqualify(a:path)
   let l:items = s:GetMenuItems(a:path)
   let l:items = s:FilterMenuItems(l:items, len(l:parts) ==# 0)
@@ -219,7 +236,8 @@ function! s:ShowMenu(path, id) abort
   for l:item in l:items
     let l:id_pad = l:id_len - len(string(l:item.id))
     let l:line = printf('%*s[%s] ', l:id_pad, '', l:item.id)
-    if l:item.is_leaf
+    " TODO: Add .is_leaf
+    if len(l:item.children) ==# 0
       let l:symbol = g:menu_leaf_char
       let l:symbol_hl = 'MenuLeafIcon'
     else
@@ -309,7 +327,8 @@ function! menu#Menu(path) abort
       if l:action.type ==# s:exit_action
         break
       elseif l:action.type ==# s:select_action
-        if l:action.selection.is_leaf
+        " TODO: Add .is_leaf
+        if len(l:action.selection.children) ==# 0
           execute 'emenu ' . l:action.selection.path
           break
         else
