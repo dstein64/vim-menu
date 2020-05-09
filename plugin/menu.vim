@@ -28,6 +28,20 @@ let g:menu_debug_mode = get(g:, 'menu_debug_mode', 0)
 " :highlight WinInactive term=bold ctermfg=12 ctermbg=159 guifg=Blue guibg=LightCyan
 highlight default link MenuSelected Search
 highlight default link MenuId LineNr
+highlight default link MenuLeafIcon Constant
+highlight default link MenuNonTermIcon Directory
+
+if has('multi_byte') && &encoding ==# 'utf-8'
+  " Right-pointing triangle
+  let s:default_nonterm_char = nr2char(0x25B6)
+  " Heavy asterisk
+  let s:default_leaf_char = nr2char(0x2731)
+else
+  let s:default_nonterm_char = '>'
+  let s:default_leaf_char = '*'
+endif
+let g:menu_nonterm_char = get(g:, 'menu_nonterm_char', s:default_nonterm_char)
+let g:menu_leaf_char = get(g:, 'menu_leaf_char', s:default_leaf_char)
 
 let &cpo = s:save_cpo
 unlet s:save_cpo

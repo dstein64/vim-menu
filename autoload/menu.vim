@@ -6,7 +6,6 @@
 " be (for the RHS text).
 " TODO: Create a syntax rule so that the :sign highlighting doesn't extend too
 " far. See $VIMRUNTIME/syntax/colortest.vim.
-" TODO: Use colors to indicate leaf or submenu.
 
 " XXX: When preparing and updating menus, there are redundant calls to :nmenu.
 " This approach is simpler and more readable than calling and parsing once,
@@ -219,7 +218,11 @@ function! s:ShowMenu(path, id) abort
   let l:selected_line = 1
   for l:item in l:items
     let l:id_pad = l:id_len - len(string(l:item.id))
-    let l:line = printf('%*s[%s] ', l:id_pad, '', l:item.id) . l:item.name
+    let l:symbol = l:item.is_leaf ? g:menu_leaf_char : g:menu_nonterm_char
+    if get(b:, 'current_syntax', '') ==# 'menu' && has('conceal')
+      let l:symbol = "\x01" . l:symbol
+    endif
+    let l:line = printf('%*s[%s] %s %s', l:id_pad, '', l:item.id, l:symbol, l:item.name)
     if l:item.is_separator | let l:line = '' | endif
     if l:item.id ==# a:id | let l:selected_line = line('$') | endif
     call append(line('$') - 1, l:line)
