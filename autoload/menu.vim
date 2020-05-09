@@ -6,11 +6,6 @@
 " TODO: Create a syntax rule so that the :sign highlighting doesn't extend too
 " far. See $VIMRUNTIME/syntax/colortest.vim.
 
-" XXX: When preparing and updating menus, there are redundant calls to :nmenu.
-" This approach is simpler and more readable than calling and parsing once,
-" and there are no noticeable performance implications when used with the
-" default menu.
-
 let s:down_chars = ['j', "\<down>"]
 let s:up_chars = ['k', "\<up>"]
 let s:back_chars = ['h', "\<left>"]
@@ -46,22 +41,21 @@ function! s:Unqualify(qualified) abort
   return l:parts
 endfunction
 
-" Returns true if the specified path corresponds to a leaf.
-function! s:IsLeaf(path) abort
-  " Leaf items have 3 lines: "--- Menus ---", parent, command
-  return len(split(execute('nmenu ' . a:path), '\n')) ==# 3
-endfunction
-
 function! s:IsSeparator(name) abort
   return a:name =~# '^-.*-$'
 endfunction
 
-function! s:ParseMenu() abort
-  let l:lines = split(execute('nmenu'), '\n')[1:]
+" Returns a dictionary that maps each menu path to the corresponding menu
+" item.
+function! s:ParseMenu(mode) abort
+  let l:lines = split(execute(a:mode . 'menu'), '\n')[1:]
+  call map(l:lines, '"  " . v:val')
+  let l:lines = ['0 '] + l:lines
   let l:depth = -1
   let l:output = {}
   let l:stack = [{'children': []}]
-  for l:line in l:lines
+  for l:idx in range(len(l:lines))
+    let l:line = l:lines[l:idx]
     if l:line =~# '^ *\d'
       let l:depth2 = len(matchstr(l:line, '^ *')) / 2
       if l:depth2 <=# l:depth
@@ -70,16 +64,22 @@ function! s:ParseMenu() abort
         endfor
       endif
       let l:full_name = l:line[matchstrpos(l:line, ' *\d\+ ')[2]:]
-      let [l:name, l:subname; l:_] = split(l:full_name, '\^I\|$', 1)
+      if match(l:full_name, '\^I') !=# -1
+        let [l:name, l:subname] = split(l:full_name, '\^I')
+      else
+        let [l:name, l:subname] = [l:full_name, '']
+      endif
       let l:amp_idx = stridx(l:name, '&')
       if l:amp_idx !=# -1
         let l:name = substitute(l:name, '&', '', '')
       endif
       let l:is_separator = l:name =~# '^-.*-$'
       let l:parents = []
-      for l:parent in l:stack[1:]
+      for l:parent in l:stack[2:]
         call add(l:parents, l:parent.name)
       endfor
+      let l:is_leaf = l:idx + 1 < len(l:lines)
+            \ && l:lines[l:idx + 1] !~# '^ *\d'
       let l:path = s:Qualify(l:parents + [l:name])
       let l:item = {
             \   'name': l:name,
@@ -88,6 +88,8 @@ function! s:ParseMenu() abort
             \   'amp_idx': l:amp_idx,
             \   'children': [],
             \   'is_separator': l:is_separator,
+            \   'is_root': len(l:parents) ==# 0,
+            \   'is_leaf': l:is_leaf
             \ }
       call add(l:stack[-1]['children'], l:item)
       call add(l:stack, l:item)
@@ -96,28 +98,13 @@ function! s:ParseMenu() abort
     else
     endif
   endfor
-  let l:output[''] = l:stack[0]
   return l:output
 endfunction
 
-" Given a parsed menu and an item path, return the submenu items.
-function! s:GetMenuItems(parsed, path) abort
-  return s:ParseMenu()[a:path].children
-endfunction
-
-" Returns true if all leaves under the specified path are <Nop>.
-function! s:AllNops(path) abort
+" Returns true if all leaves under the specified item are <Nop>.
+function! s:AllNops(item) abort
+  " TODO: implement for real
   return 0
-  let l:text = execute('nmenu ' . a:path)
-  let l:lines = split(l:text, '\n')
-  for l:line in l:lines
-    " This pattern matches lines with commands.
-    let cmd_pattern = '^ \+n[^-]* \+[^ ]\+'
-    if l:line =~# cmd_pattern && l:line !~# '<Nop>$'
-      return 0
-    endif
-  endfor
-  return 1
 endfunction
 
 " Remove invalid and/or unsuitable items.
@@ -128,7 +115,7 @@ function! s:FilterMenuItems(items, root) abort
   endif
   let l:IsSep = {item -> s:IsSeparator(item.name)}
   " Exlude non-separator entries that only have <Nop> subitems.
-  call filter(l:items, 'l:IsSep(v:val) || !s:AllNops(v:val.path)')
+  call filter(l:items, 'l:IsSep(v:val) || !s:AllNops(v:val)')
   " Drop consecutive separators and separators on the boundary.
   let l:items2 = []
   let l:len = len(l:items)
@@ -191,17 +178,15 @@ function! s:Contains(list, element) abort
 endfunction
 
 " Show the specified menu, with the specified item selected.
-function! s:ShowMenu(path, id) abort
+function! s:ShowMenu(parsed, path, id) abort
   " TODO: temporarilty set state (e.g., no hlsearch)
   " TODO: clear any existing menus (or possibly do this when items are
   " selected)
-  " TODO: REAL IsLeaf Here
-  "if s:IsLeaf(a:path)
-  "  throw 'No menu: ' . a:path
-  "endif
   let l:parts = s:Unqualify(a:path)
-  let l:items = s:GetMenuItems(a:path)
-  let l:items = s:FilterMenuItems(l:items, len(l:parts) ==# 0)
+  let l:items = a:parsed[a:path].children
+  if a:parsed[a:path].is_leaf | throw 'No menu: ' . a:path | endif
+  let l:root = len(l:parts) ==# 0
+  let l:items = s:FilterMenuItems(l:items, l:root)
   let l:items = s:AttachId(l:items)
   let l:title = 'Menu'
   if len(l:parts) ># 0
@@ -236,8 +221,7 @@ function! s:ShowMenu(path, id) abort
   for l:item in l:items
     let l:id_pad = l:id_len - len(string(l:item.id))
     let l:line = printf('%*s[%s] ', l:id_pad, '', l:item.id)
-    " TODO: Add .is_leaf
-    if len(l:item.children) ==# 0
+    if l:item.is_leaf
       let l:symbol = g:menu_leaf_char
       let l:symbol_hl = 'MenuLeafIcon'
     else
@@ -322,13 +306,13 @@ function! menu#Menu(path) abort
     endif
     let l:selection_ids = []
     let l:selection_id = 1
+    let l:parsed = s:ParseMenu(mode())
     while 1
-      let l:action = s:ShowMenu(l:path, l:selection_id)
+      let l:action = s:ShowMenu(l:parsed, l:path, l:selection_id)
       if l:action.type ==# s:exit_action
         break
       elseif l:action.type ==# s:select_action
-        " TODO: Add .is_leaf
-        if len(l:action.selection.children) ==# 0
+        if l:action.selection.is_leaf 
           execute 'emenu ' . l:action.selection.path
           break
         else
