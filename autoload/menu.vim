@@ -187,6 +187,9 @@ function! s:Contains(list, element) abort
 endfunction
 
 " Show the specified menu, with the specified item selected.
+" matchadd and matchaddpos are used for colorization. This is applied
+" per-window, as opposed to per-buffer. This is not a problem here since the
+" window is only used for a menu (i.e., it's closed as part of usage).
 function! s:ShowMenu(parsed, path, id) abort
   " TODO: temporarilty set state (e.g., no hlsearch)
   " TODO: clear any existing menus (or possibly do this when items are
