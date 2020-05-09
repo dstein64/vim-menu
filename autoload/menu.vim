@@ -26,7 +26,7 @@ let s:back_action = 3
 let s:root_exclusions = ['ToolBar', 'PopUp', 'TouchBar']
 
 " *************************************************
-" * Utils
+" * Core
 " *************************************************
 
 " Given a menu item path (as a List), return its qualified name.
