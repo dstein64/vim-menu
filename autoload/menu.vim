@@ -1,7 +1,6 @@
 " TODO: add an option to use popup/float windows
 " TODO: make sure you're always using the right :menu (e.g., :nmenu)
 " TODO: Add titles to the menu (e.g., File, Edit, Edit > Find)
-" TODO: Have to add a character to show whether an item is a leaf or not.
 " TODO: Get the longest name in :nmenu to figure out how wide the text should
 " be (for the RHS text).
 " TODO: Create a syntax rule so that the :sign highlighting doesn't extend too
@@ -16,6 +15,7 @@ let s:down_chars = ['j', "\<down>"]
 let s:up_chars = ['k', "\<up>"]
 let s:back_chars = ['h', "\<left>"]
 let s:select_chars = ['l', "\<right>", "\<cr>", "\<space>"]
+let s:quit_chars = ["\<esc>", 'Z', 'q']
 
 " Action types for ShowMenu()
 let s:exit_action = 1
@@ -249,7 +249,7 @@ function! s:ShowMenu(path, id) abort
     redraw
     " TODO: more chars: numbers, control chars (q for quit)
     let l:char = s:GetChar()
-    if s:Contains(["\<esc>", 'Z'], l:char)
+    if s:Contains(s:quit_chars, l:char)
       let l:action.type = s:exit_action
       break
     elseif s:Contains(s:down_chars, l:char)
