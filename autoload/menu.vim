@@ -104,17 +104,31 @@ function! s:ParseMenu(mode) abort
       if has_key(l:stack[-1], 'mapping')
         throw 'Mapping already exists'
       endif
-      let l:stack[-1].mapping = trim(l:line)
+      let l:trimmed = trim(l:line)
+      let l:split_idx = match(l:trimmed, ' ')
+      let l:lhs = l:trimmed[:l:split_idx - 1]
+      let l:rhs = trim(l:trimmed[l:split_idx:])
+      let l:stack[-1].mapping = [l:lhs, l:rhs]
     endif
   endfor
   return l:output
 endfunction
 
-" Returns true if all leaves under the specified item are <Nop>.
-function! s:AllNops(item) abort
-  " TODO: implement for real
-  " TODO: use the .mapping field for leaves.
-  return 0
+" Returns true if all leaves under an item are disabled or <Nop>.
+function! s:IsDisabled(item) abort
+  let l:mappings = []
+  let l:stack = [a:item]
+  while len(l:stack) ># 0
+    let l:candidate = remove(l:stack, -1)
+    if l:candidate.is_leaf
+      let l:mapping = l:candidate.mapping
+      let l:disabled = mapping[0] =~# '-' || mapping[1] ==# '<Nop>'
+      if !l:disabled | return 0 | endif
+    else
+      call extend(l:stack, l:candidate.children)
+    endif
+  endwhile
+  return 1
 endfunction
 
 " Remove invalid and/or unsuitable items.
@@ -124,7 +138,7 @@ function! s:FilterMenuItems(items, root) abort
     call filter(l:items, 'index(s:root_exclusions, v:val.name) ==# -1')
   endif
   " Exlude non-separator entries that only have <Nop> subitems.
-  call filter(l:items, 'v:val.is_separator || !s:AllNops(v:val)')
+  call filter(l:items, 'v:val.is_separator || !s:IsDisabled(v:val)')
   " Drop consecutive separators and separators on the boundary.
   let l:items2 = []
   let l:len = len(l:items)
@@ -195,13 +209,14 @@ function! s:CreateMenu(parsed, path, id) abort
   " TODO: clear any existing menus (or possibly do this when items are
   " selected)
   let l:parts = s:Unqualify(a:path)
-  if len(a:parsed) <=# 1
-    throw 'No available menus. See ":help creating-menus."'
+  let l:not_avail_err = 'No available menus. See ":help creating-menus."'
+  if len(a:parsed) <=# 1 | throw l:not_avail_err | endif
+  if !has_key(a:parsed, a:path) || a:parsed[a:path].is_leaf
+    throw 'No menu: ' . a:path
   endif
   let l:items = a:parsed[a:path].children
-  if a:parsed[a:path].is_leaf | throw 'No menu: ' . a:path | endif
-  let l:root = len(l:parts) ==# 0
-  let l:items = s:FilterMenuItems(l:items, l:root)
+  let l:items = s:FilterMenuItems(l:items, a:parsed[a:path].is_root)
+  if len(l:items) ==# 0 | throw l:not_avail_err | endif
   let l:items = s:AttachId(l:items)
   let l:title = 'Menu'
   if len(l:parts) ># 0
