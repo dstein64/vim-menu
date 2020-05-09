@@ -17,7 +17,7 @@ let s:back_chars = ['h', "\<left>"]
 let s:select_chars = ['l', "\<right>", "\<cr>", "\<space>"]
 let s:quit_chars = ["\<esc>", 'Z', 'q']
 
-" Action types for ShowMenu()
+" Action types for GetAction()
 let s:exit_action = 1
 let s:select_action = 2
 let s:back_action = 3
@@ -189,8 +189,8 @@ endfunction
 " Show the specified menu, with the specified item selected.
 " matchadd and matchaddpos are used for colorization. This is applied
 " per-window, as opposed to per-buffer. This is not a problem here since the
-" window is only used for a menu (i.e., it's closed as part of usage).
-function! s:ShowMenu(parsed, path, id) abort
+" window is only used for a menu (i.e., it's closed as part of usage)
+function! s:CreateMenu(parsed, path, id) abort
   " TODO: temporarilty set state (e.g., no hlsearch)
   " TODO: clear any existing menus (or possibly do this when items are
   " selected)
@@ -216,19 +216,6 @@ function! s:ShowMenu(parsed, path, id) abort
   setlocal nonumber
   setlocal norelativenumber
   let &l:statusline = l:title
-
-  " TODO: delete
-  " Example l:items
-  " Added an 'id' field too. And a 'mapping' field for leaves.
-  "{'is_leaf': 0, 'is_separator': 0, 'name': 'File', 'amp_idx': 0, 'subname': '', 'path': 'File'}
-  "{'is_leaf': 0, 'is_separator': 0, 'name': 'Edit', 'amp_idx': 0, 'subname': '', 'path': 'Edit'}
-  "{'is_leaf': 0, 'is_separator': 0, 'name': 'Tools', 'amp_idx': 0, 'subname': '', 'path': 'Tools'}
-  "{'is_leaf': 0, 'is_separator': 0, 'name': 'Syntax', 'amp_idx': 0, 'subname': '', 'path': 'Syntax'}
-  "{'is_leaf': 0, 'is_separator': 0, 'name': 'Buffers', 'amp_idx': 0, 'subname': '', 'path': 'Buffers'}
-  "{'is_leaf': 0, 'is_separator': 0, 'name': 'Dan', 'amp_idx': -1, 'subname': '', 'path': 'Dan'}
-  "{'is_leaf': 0, 'is_separator': 0, 'name': 'Window', 'amp_idx': -1, 'subname': '', 'path': 'Window'}
-  "{'is_leaf': 0, 'is_separator': 0, 'name': 'Help', 'amp_idx': 0, 'subname': '', 'path': 'Help'}
-
   " The last item can't be a separator, so don't have to handle the different
   " indexing used for separators.
   let l:id_len = len(string(l:items[-1].id))
@@ -252,10 +239,15 @@ function! s:ShowMenu(parsed, path, id) abort
     call append(line('$') - 1, l:line)
   endfor
   call matchadd('MenuID', '^ *\zs\[\d\+\]\ze')
-
   normal! Gddgg0
   execute 'resize ' . line('$')
   execute 'normal! ' . l:selected_line . 'G'
+  return l:items
+endfunction
+
+" Gets and processes user menu interactions (movements) and returns when an
+" action (exit, select, back) is taken.
+function s:GetAction(items) abort
   echo '  vim-menu'
   let l:action = {}
   while 1
@@ -278,7 +270,7 @@ function! s:ShowMenu(parsed, path, id) abort
       break
     elseif s:Contains(s:select_chars, l:char)
       let l:action.type = s:select_action
-      let l:action.selection = l:items[l:line_before - 1]
+      let l:action.selection = a:items[l:line_before - 1]
       break
     elseif l:char ==# 'd'
       execute "normal! \<c-d>"
@@ -292,7 +284,7 @@ function! s:ShowMenu(parsed, path, id) abort
     let l:line_after = line('.')
     " Skip separators. Running this once assumes no consecutive separators,
     " which is imposed above.
-    if l:items[l:line_after - 1].is_separator
+    if a:items[l:line_after - 1].is_separator
       if l:line_after - l:line_before ># 0
         normal! j
       else
@@ -300,7 +292,6 @@ function! s:ShowMenu(parsed, path, id) abort
       endif
     endif
   endwhile
-  bdelete!
   return l:action
 endfunction
 
@@ -323,7 +314,9 @@ function! menu#Menu(path) abort
     let l:selection_id = 1
     let l:parsed = s:ParseMenu(mode())
     while 1
-      let l:action = s:ShowMenu(l:parsed, l:path, l:selection_id)
+      let l:items = s:CreateMenu(l:parsed, l:path, l:selection_id)
+      let l:action = s:GetAction(l:items)
+      bdelete!
       if l:action.type ==# s:exit_action
         break
       elseif l:action.type ==# s:select_action
