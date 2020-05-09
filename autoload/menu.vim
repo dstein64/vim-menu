@@ -196,11 +196,8 @@ function! s:ShowMenu(path, id) abort
   setlocal scrolloff=0
   setlocal signcolumn=no
   setlocal nocursorline
-  setlocal nonumber norelativenumber
-  if has('conceal')
-    setlocal conceallevel=3
-    setlocal concealcursor=nvic
-  endif
+  setlocal nonumber
+  setlocal norelativenumber
   let &l:statusline = l:title
 
   " TODO: delete
@@ -221,19 +218,23 @@ function! s:ShowMenu(path, id) abort
   let l:selected_line = 1
   for l:item in l:items
     let l:id_pad = l:id_len - len(string(l:item.id))
-    let l:symbol = l:item.is_leaf ? g:menu_leaf_char : g:menu_nonterm_char
-    if has('conceal') | let l:symbol = "\x01" . l:symbol | endif
-    let l:line = printf('%*s[%s] %s %s', l:id_pad, '', l:item.id, l:symbol, l:item.name)
+    let l:line = printf('%*s[%s] ', l:id_pad, '', l:item.id)
+    if l:item.is_leaf
+      let l:symbol = g:menu_leaf_char
+      let l:symbol_hl = 'MenuLeafIcon'
+    else
+      let l:symbol = g:menu_nonterm_char
+      let l:symbol_hl = 'MenuNonTermIcon'
+    endif
+    if strwidth(l:symbol) !=# 1 | let l:symbol = ' ' | endif
+    let l:symbol_pos = [[line('$'), len(l:line) + 1, len(l:symbol)]]
+    call matchaddpos(l:symbol_hl, l:symbol_pos)
+    let l:line .= l:symbol . ' ' . l:item.name
     if l:item.is_separator | let l:line = '' | endif
     if l:item.id ==# a:id | let l:selected_line = line('$') | endif
     call append(line('$') - 1, l:line)
   endfor
   call matchadd('MenuID', '^ *\zs\[\d\+\]\ze')
-  if has('conceal')
-    call matchadd('MenuNonTermIcon', '\%x01' . g:menu_nonterm_char)
-    call matchadd('MenuLeafIcon', '\%x01' . g:menu_leaf_char)
-    call matchadd('Conceal', '\%x01')
-  endif
 
   normal! Gddgg0
   execute 'resize ' . line('$')
@@ -248,7 +249,7 @@ function! s:ShowMenu(path, id) abort
     redraw
     " TODO: more chars: numbers, control chars (q for quit)
     let l:char = s:GetChar()
-    if l:char ==# "\<esc>"
+    if s:Contains(["\<esc>", 'Z'], l:char)
       let l:action.type = s:exit_action
       break
     elseif s:Contains(s:down_chars, l:char)
