@@ -5,6 +5,7 @@
 " be (for the RHS text).
 " TODO: Create a syntax rule so that the :sign highlighting doesn't extend too
 " far. See $VIMRUNTIME/syntax/colortest.vim.
+" TODO: Press K on leaf to show command.
 
 let s:down_chars = ['j', "\<down>"]
 let s:up_chars = ['k', "\<up>"]
@@ -96,6 +97,10 @@ function! s:ParseMenu(mode) abort
       let l:output[l:path] = l:item
       let l:depth = l:depth2
     else
+      if has_key(l:stack[-1], 'mapping')
+        throw 'Mapping already exists'
+      endif
+      let l:stack[-1].mapping = trim(l:line)
     endif
   endfor
   return l:output
@@ -104,6 +109,7 @@ endfunction
 " Returns true if all leaves under the specified item are <Nop>.
 function! s:AllNops(item) abort
   " TODO: implement for real
+  " TODO: use the .mapping field for leaves.
   return 0
 endfunction
 
@@ -138,7 +144,7 @@ endfunction
 " Attach an ID to menu items. IDs start at 1 and increment for non-separators.
 " IDs start at -1 and decrement for non-separators.
 function! s:AttachId(items)
-  let l:items = a:items[:]
+  let l:items = deepcopy(a:items[:])
   let l:id = 1
   let l:sep_id = -1
   for l:item in l:items
@@ -183,6 +189,9 @@ function! s:ShowMenu(parsed, path, id) abort
   " TODO: clear any existing menus (or possibly do this when items are
   " selected)
   let l:parts = s:Unqualify(a:path)
+  if len(a:parsed) <=# 1
+    throw 'No available menus. See ":help creating-menus."'
+  endif
   let l:items = a:parsed[a:path].children
   if a:parsed[a:path].is_leaf | throw 'No menu: ' . a:path | endif
   let l:root = len(l:parts) ==# 0
@@ -204,7 +213,7 @@ function! s:ShowMenu(parsed, path, id) abort
 
   " TODO: delete
   " Example l:items
-  " Added an 'id' field too.
+  " Added an 'id' field too. And a 'mapping' field for leaves.
   "{'is_leaf': 0, 'is_separator': 0, 'name': 'File', 'amp_idx': 0, 'subname': '', 'path': 'File'}
   "{'is_leaf': 0, 'is_separator': 0, 'name': 'Edit', 'amp_idx': 0, 'subname': '', 'path': 'Edit'}
   "{'is_leaf': 0, 'is_separator': 0, 'name': 'Tools', 'amp_idx': 0, 'subname': '', 'path': 'Tools'}
