@@ -5,7 +5,6 @@
 " be (for the RHS text).
 " TODO: Create a syntax rule so that the :sign highlighting doesn't extend too
 " far. See $VIMRUNTIME/syntax/colortest.vim.
-" TODO: Press K on leaf to show command.
 
 " *************************************************
 " * Globals
@@ -17,7 +16,7 @@ let s:back_chars = ['h', "\<left>"]
 let s:select_chars = ['l', "\<right>", "\<cr>", "\<space>"]
 let s:quit_chars = ["\<esc>", 'Z', 'q']
 
-" Action types for GetAction()
+" Action types for PromptLoop()
 let s:exit_action = 1
 let s:select_action = 2
 let s:back_action = 3
@@ -218,10 +217,8 @@ function! s:CreateMenu(parsed, path, id) abort
   let l:items = s:FilterMenuItems(l:items, a:parsed[a:path].is_root)
   if len(l:items) ==# 0 | throw l:not_avail_err | endif
   let l:items = s:AttachId(l:items)
-  let l:title = 'Menu'
-  if len(l:parts) ># 0
-    let l:title .= ' | ' . join(l:parts, ' > ')
-  endif
+  let l:title = join(l:parts, ' > ')
+  if len(l:title) ==# 0 | let l:title = ' ' | endif
   " TODO: reuse existing buffer so that usage doesn't make the buffer list
   " numbers get high. As part of this, make the buffer read-only and hidden...
   botright split +enew
@@ -260,18 +257,41 @@ function! s:CreateMenu(parsed, path, id) abort
   return l:items
 endfunction
 
+" Display leaf item mapping, with special keys properly colored.
+function s:ShowItemInfo(item) abort
+  let l:mapping = a:item.mapping[1]
+  redraw
+  while strchars(l:mapping) ># 0
+    let l:match = matchstr(l:mapping, '^<[^ <>]\+>')
+    if l:match !=# ''
+      echohl SpecialKey
+      echon l:match
+      echohl None
+      let l:mapping = l:mapping[len(l:match):]
+    else
+      let l:char = strcharpart(l:mapping, 0, 1)
+      echon l:char
+      let l:mapping = l:mapping[len(l:char):]
+    endif
+  endwhile
+  echohl Question
+  echo '[Press any key to continue]'
+  call s:GetChar()
+  echohl None
+endfunction
+
 " Gets and processes user menu interactions (movements) and returns when an
 " action (exit, select, back) is taken.
-function s:GetAction(items) abort
-  echo '  vim-menu'
+function s:PromptLoop(items) abort
   let l:action = {}
+  let l:prompt = 'vim-menu> '
   while 1
     sign unplace 1
     let l:line_before = line('.')
+    let l:item = a:items[l:line_before - 1]
     execute printf('sign place 1 line=%s name=menu_selected buffer=%s',
           \ l:line_before, bufnr('%'))
-    redraw
-    " TODO: more chars: numbers, control chars (q for quit)
+    redraw | echo l:prompt
     let l:char = s:GetChar()
     if s:Contains(s:quit_chars, l:char)
       let l:action.type = s:exit_action
@@ -285,7 +305,7 @@ function s:GetAction(items) abort
       break
     elseif s:Contains(s:select_chars, l:char)
       let l:action.type = s:select_action
-      let l:action.selection = a:items[l:line_before - 1]
+      let l:action.selection = l:item
       break
     elseif l:char ==# 'd'
       execute "normal! \<c-d>"
@@ -295,6 +315,8 @@ function s:GetAction(items) abort
       normal! gg
     elseif s:Contains(['G', 'H', 'M', 'L', '{', '}'], l:char)
       execute 'normal! ' . l:char
+    elseif l:char ==# 'K' && l:item.is_leaf
+      call s:ShowItemInfo(l:item)
     endif
     let l:line_after = line('.')
     " Skip separators. Running this once assumes no consecutive separators,
@@ -316,6 +338,7 @@ endfunction
 
 function! menu#Menu(path) abort
   try
+    echohl None
     if mode() !=# 'n'
       throw 'Menu only available in normal mode'
     endif
@@ -330,13 +353,13 @@ function! menu#Menu(path) abort
     let l:parsed = s:ParseMenu(mode())
     while 1
       let l:items = s:CreateMenu(l:parsed, l:path, l:selection_id)
-      let l:action = s:GetAction(l:items)
+      let l:action = s:PromptLoop(l:items)
       bdelete!
       if l:action.type ==# s:exit_action
         break
       elseif l:action.type ==# s:select_action
         if l:action.selection.is_leaf 
-          execute 'emenu ' . l:action.selection.path
+          let l:execute_pending = 'emenu ' . l:action.selection.path
           break
         else
           let l:path = l:action.selection.path
@@ -360,11 +383,14 @@ function! menu#Menu(path) abort
         throw 'Unsupported action'
       endif
     endwhile
+    redraw | echo
   catch
-    if g:menu_debug_mode
-      echohl ErrorMsg | echo v:throwpoint | echohl None
-    endif
-    echohl ErrorMsg | echo 'vim-menu: ' . v:exception | echohl None
+    echohl ErrorMsg
+    if g:menu_debug_mode | echo v:throwpoint | endif
+    echo 'vim-menu: ' . v:exception
     call s:Beep()
+  finally
+    echohl None
   endtry
+  if exists('l:execute_pending') | execute l:execute_pending | endif
 endfunction
