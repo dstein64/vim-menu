@@ -7,6 +7,10 @@
 " far. See $VIMRUNTIME/syntax/colortest.vim.
 " TODO: Press K on leaf to show command.
 
+" *************************************************
+" * Globals
+" *************************************************
+
 let s:down_chars = ['j', "\<down>"]
 let s:up_chars = ['k', "\<up>"]
 let s:back_chars = ['h', "\<left>"]
@@ -20,6 +24,10 @@ let s:back_action = 3
 
 " Exclude ToolBar, PopUp, and TouchBar from the root menu.
 let s:root_exclusions = ['ToolBar', 'PopUp', 'TouchBar']
+
+" *************************************************
+" * Utils
+" *************************************************
 
 " Given a menu item path (as a List), return its qualified name.
 function! s:Qualify(path) abort
@@ -40,10 +48,6 @@ function! s:Unqualify(qualified) abort
   call map(l:parts, 'substitute(v:val, "\t", ''\.'', "g")')
   call map(l:parts, 'substitute(v:val, ''\\ '', " ", "g")')
   return l:parts
-endfunction
-
-function! s:IsSeparator(name) abort
-  return a:name =~# '^-.*-$'
 endfunction
 
 " Returns a dictionary that maps each menu path to the corresponding menu
@@ -119,9 +123,8 @@ function! s:FilterMenuItems(items, root) abort
   if a:root
     call filter(l:items, 'index(s:root_exclusions, v:val.name) ==# -1')
   endif
-  let l:IsSep = {item -> s:IsSeparator(item.name)}
   " Exlude non-separator entries that only have <Nop> subitems.
-  call filter(l:items, 'l:IsSep(v:val) || !s:AllNops(v:val)')
+  call filter(l:items, 'v:val.is_separator || !s:AllNops(v:val)')
   " Drop consecutive separators and separators on the boundary.
   let l:items2 = []
   let l:len = len(l:items)
