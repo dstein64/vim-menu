@@ -1,6 +1,3 @@
-" TODO: Get the longest name in :nmenu to figure out how wide the text should
-" be (for the RHS text).
-
 " *************************************************
 " * Globals
 " *************************************************
