@@ -14,6 +14,7 @@ let s:up_chars = ['k', "\<up>"]
 let s:back_chars = ['h', "\<left>"]
 let s:select_chars = ['l', "\<right>", "\<cr>", "\<space>"]
 let s:quit_chars = ["\<esc>", 'Z', 'q']
+let s:shortcut_char = 's'
 
 let s:code0 = char2nr('0')
 let s:code1 = char2nr('1')
@@ -76,10 +77,13 @@ function! s:ParseMenu(mode) abort
       else
         let [l:name, l:subname] = [l:full_name, '']
       endif
-      let l:amp_idx = stridx(l:name, '&')
+      " Find the first ampersand that's 1) not preceded by an ampersand and
+      " 2) followed by a non-ampersand.
+      let l:amp_idx = match(l:name, '\([^&]\|^\)\zs&[^&]')
       if l:amp_idx !=# -1
         let l:name = substitute(l:name, '&', '', '')
       endif
+      let l:name = substitute(l:name, '&&', '&', 'g')
       let l:is_separator = l:name =~# '^-.*-$'
       let l:parents = []
       for l:parent in l:stack[2:]
@@ -252,7 +256,12 @@ function! s:CreateMenu(parsed, path, id) abort
     if strwidth(l:symbol) !=# 1 | let l:symbol = ' ' | endif
     let l:symbol_pos = [[line('$'), len(l:line) + 1, len(l:symbol)]]
     call matchaddpos(l:symbol_hl, l:symbol_pos)
-    let l:line .= l:symbol . ' ' . l:item.name
+    let l:line .= l:symbol . ' '
+    if l:item.amp_idx !=# -1
+      let l:amp_pos = [[line('$'), len(l:line) + 1 + l:item.amp_idx, 1]]
+      call matchaddpos('MenuShortcut', l:amp_pos)
+    endif
+    let l:line .= l:item.name
     if l:item.is_separator | let l:line = '' | endif
     if l:item.id ==# a:id | let l:selected_line = line('$') | endif
     call append(line('$') - 1, l:line)
@@ -333,12 +342,26 @@ function! s:CreateItemLineLookup(items) abort
   return l:lookup
 endfunction
 
+" Returns a Dict mapping shortcuts to items.
+function! s:CreateShortcutLookup(items) abort
+  let l:lookup = {}
+  for l:item in a:items
+    if l:item.amp_idx ==# -1 | continue | endif
+    let l:code= strgetchar(l:item.name[l:item.amp_idx:], 0)
+    let l:char = nr2char(l:code)
+    let l:lower = tolower(l:char)
+    let l:lookup[l:lower] = l:item
+  endfor
+  return l:lookup
+endfunction
+
 " Gets and processes user menu interactions (movements) and returns when an
 " action (exit, select, back) is taken.
 function! s:PromptLoop(items) abort
   let l:action = {}
   let l:prompt = 'vim-menu> '
   let l:item_line_lookup = s:CreateItemLineLookup(a:items)
+  let l:shortcut_lookup = s:CreateShortcutLookup(a:items)
   while 1
     sign unplace 1
     let l:line_before = line('.')
@@ -366,6 +389,15 @@ function! s:PromptLoop(items) abort
       let l:item_id = s:ScanItemIdDigits(l:prompt, a:items[-1].id, [l:char])
       if l:item_id !=# 0
         execute 'normal! ' . l:item_line_lookup[l:item_id] . 'G'
+      endif
+    elseif l:char ==# s:shortcut_char
+      redraw | echo l:prompt . s:shortcut_char
+      let l:shortcut = s:GetChar()
+      let l:lower = tolower(l:shortcut)
+      if has_key(l:shortcut_lookup, l:lower)
+        let l:action.type = s:select_action
+        let l:action.selection = l:shortcut_lookup[l:lower]
+        break
       endif
     elseif l:char ==# 'd'
       execute "normal! \<c-d>"

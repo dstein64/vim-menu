@@ -26,10 +26,11 @@ let g:menu_debug_mode = get(g:, 'menu_debug_mode', 0)
 " E.g., the following will use custom highlight colors for the selected menu
 " item.
 " :highlight WinInactive term=bold ctermfg=12 ctermbg=159 guifg=Blue guibg=LightCyan
-highlight default link MenuSelected Search
+highlight default link MenuSelected Visual
 highlight default link MenuId LineNr
 highlight default link MenuLeafIcon Constant
 highlight default link MenuNonTermIcon Directory
+highlight default link MenuShortcut ModeMsg
 
 if has('multi_byte') && &encoding ==# 'utf-8'
   " Right-pointing triangle
