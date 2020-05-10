@@ -31,6 +31,7 @@ highlight default link MenuId LineNr
 highlight default link MenuLeafIcon Constant
 highlight default link MenuNonTermIcon Directory
 highlight default link MenuShortcut ModeMsg
+highlight default link MenuRightAlignedText MoreMsg
 
 if has('multi_byte') && &encoding ==# 'utf-8'
   " Right-pointing triangle

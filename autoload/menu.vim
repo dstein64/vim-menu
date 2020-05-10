@@ -1,9 +1,5 @@
-" TODO: make sure you're always using the right :menu (e.g., :nmenu)
-" TODO: Add titles to the menu (e.g., File, Edit, Edit > Find)
 " TODO: Get the longest name in :nmenu to figure out how wide the text should
 " be (for the RHS text).
-" TODO: Create a syntax rule so that the :sign highlighting doesn't extend too
-" far. See $VIMRUNTIME/syntax/colortest.vim.
 
 " *************************************************
 " * Globals
@@ -206,10 +202,22 @@ function! s:Contains(list, element) abort
   return index(a:list, a:element) !=# -1
 endfunction
 
-" Show the specified menu, with the specified item selected.
-" matchadd and matchaddpos are used for colorization. This is applied
-" per-window, as opposed to per-buffer. This is not a problem here since the
-" window is only used for a menu (i.e., it's closed as part of usage)
+" Returns the maximum width of 'name + subname' across the specified items.
+function! s:MaxFullNameWidth(items) abort
+  let l:max = 0
+  for l:item in a:items
+    if l:item.is_separator | continue | endif
+    if strwidth(l:item.subname) ==# 0 | continue | endif
+    let l:width = strwidth(l:item.name) + strwidth(l:item.subname)
+    let l:max = max([l:max, l:width])
+  endfor
+  return l:max
+endfunction
+
+" Show the specified menu, with the specified item selected. 'matchadd' and
+" 'matchaddpos' are used for colorization. This is applied per-window, as
+" opposed to per-buffer. This is not a problem here since the window is only
+" used for a menu (i.e., it's closed as part of usage)
 function! s:CreateMenu(parsed, path, id) abort
   " TODO: temporarilty set state (e.g., no hlsearch)
   " TODO: clear any existing menus (or possibly do this when items are
@@ -243,6 +251,9 @@ function! s:CreateMenu(parsed, path, id) abort
   " indexing used for separators.
   let l:id_len = len(string(l:items[-1].id))
   let l:selected_line = 1
+  let l:full_name_width = s:MaxFullNameWidth(l:items)
+  " All names and subnames will be separated by at least this many spaces.
+  let l:min_subname_pad = 3
   for l:item in l:items
     let l:id_pad = l:id_len - len(string(l:item.id))
     let l:line = printf('%*s[%s] ', l:id_pad, '', l:item.id)
@@ -262,6 +273,14 @@ function! s:CreateMenu(parsed, path, id) abort
       call matchaddpos('MenuShortcut', l:amp_pos)
     endif
     let l:line .= l:item.name
+    if len(l:item.subname) ># 0
+      let l:width = strwidth(l:item.subname) + strwidth(l:item.name)
+      let l:subname_pad = l:full_name_width - l:width
+      let l:line .= printf('%*s', l:subname_pad + l:min_subname_pad, ' ')
+      let l:subname_pos = [[line('$'), len(l:line) + 1, len(l:item.subname)]]
+      call matchaddpos('MenuRightAlignedText', l:subname_pos)
+      let l:line .= l:item.subname
+    endif
     if l:item.is_separator | let l:line = '' | endif
     if l:item.id ==# a:id | let l:selected_line = line('$') | endif
     call append(line('$') - 1, l:line)
