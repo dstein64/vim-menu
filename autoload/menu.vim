@@ -218,6 +218,10 @@ function! s:CreateMenu(parsed, path, id) abort
   if len(l:items) ==# 0 | throw l:not_avail_err | endif
   let l:items = s:AttachId(l:items)
   let l:title = join(l:parts, ' > ')
+  if has('multi_byte') && &encoding ==# 'utf-8'
+    " Hamburger button
+    let l:title = nr2char(0x2630) . ' ' . l:title
+  endif
   if len(l:title) ==# 0 | let l:title = ' ' | endif
   " TODO: reuse existing buffer so that usage doesn't make the buffer list
   " numbers get high. As part of this, make the buffer read-only and hidden...
