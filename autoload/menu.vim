@@ -1,4 +1,3 @@
-" TODO: add an option to use popup/float windows
 " TODO: make sure you're always using the right :menu (e.g., :nmenu)
 " TODO: Add titles to the menu (e.g., File, Edit, Edit > Find)
 " TODO: Get the longest name in :nmenu to figure out how wide the text should
@@ -15,6 +14,10 @@ let s:up_chars = ['k', "\<up>"]
 let s:back_chars = ['h', "\<left>"]
 let s:select_chars = ['l', "\<right>", "\<cr>", "\<space>"]
 let s:quit_chars = ["\<esc>", 'Z', 'q']
+
+let s:code0 = char2nr('0')
+let s:code1 = char2nr('1')
+let s:code9 = char2nr('9')
 
 " Action types for PromptLoop()
 let s:exit_action = 1
@@ -101,7 +104,7 @@ function! s:ParseMenu(mode) abort
       let l:depth = l:depth2
     else
       if has_key(l:stack[-1], 'mapping')
-        throw 'Mapping already exists'
+        throw 'Mapping already exists.'
       endif
       let l:trimmed = trim(l:line)
       let l:split_idx = match(l:trimmed, ' ')
@@ -208,7 +211,7 @@ function! s:CreateMenu(parsed, path, id) abort
   " TODO: clear any existing menus (or possibly do this when items are
   " selected)
   let l:parts = s:Unqualify(a:path)
-  let l:not_avail_err = 'No available menus. See ":help creating-menus."'
+  let l:not_avail_err = 'No available menus. See ":help creating-menus".'
   if len(a:parsed) <=# 1 | throw l:not_avail_err | endif
   if !has_key(a:parsed, a:path) || a:parsed[a:path].is_leaf
     throw 'No menu: ' . a:path
@@ -262,7 +265,7 @@ function! s:CreateMenu(parsed, path, id) abort
 endfunction
 
 " Display leaf item mapping, with special keys properly colored.
-function s:ShowItemInfo(item) abort
+function! s:ShowItemInfo(item) abort
   let l:mapping = a:item.mapping[1]
   redraw
   while strchars(l:mapping) ># 0
@@ -284,11 +287,58 @@ function s:ShowItemInfo(item) abort
   echohl None
 endfunction
 
+" Scans user input for a item ID. The first argument specifies the initial
+" output, the second argument specified the number of available items, and the
+" optional third argument specifies digits that have already been accumulated.
+function! s:ScanItemIdDigits(prompt, item_count, ...)
+  let l:digits = get(a:, 1, [])[:]
+  for l:digit in l:digits
+    let l:code = char2nr(l:digit)
+    if l:code <# s:code0 || l:code ># s:code9 | return 0 | endif
+  endfor
+  while 1
+    if len(l:digits) ># 0
+      if l:digits[0] ==# '0' | return 0 | endif
+      if l:digits[-1] ==# "\<cr>"
+        call remove(l:digits, -1)
+        break
+      endif
+      let l:code = char2nr(l:digits[-1])
+      if l:code <# s:code0 || l:code ># s:code9 | return 0 | endif
+      if str2nr(join(l:digits + ['0'], '')) ># a:item_count
+        break
+      endif
+      if len(l:digits) ==# len(string(a:item_count))
+        return 0
+      endif
+    endif
+    redraw | echo a:prompt . join(l:digits, '')
+    call add(l:digits, s:GetChar())
+  endwhile
+  let l:item_id = str2nr(join(l:digits, ''))
+  return l:item_id <=# a:item_count ? l:item_id : 0
+endfunction
+
+" Returns a List that maps item IDs to their corresponding line numbers.
+function! s:CreateItemLineLookup(items) abort
+  let l:lookup = [-1]
+  for l:idx in range(len(a:items))
+    let l:item = a:items[l:idx]
+    if l:item.is_separator | continue | endif
+    if l:item.id !=# len(l:lookup)
+      throw 'Assertion failed.'
+    endif
+    call add(l:lookup, l:idx + 1)
+  endfor
+  return l:lookup
+endfunction
+
 " Gets and processes user menu interactions (movements) and returns when an
 " action (exit, select, back) is taken.
-function s:PromptLoop(items) abort
+function! s:PromptLoop(items) abort
   let l:action = {}
   let l:prompt = 'vim-menu> '
+  let l:item_line_lookup = s:CreateItemLineLookup(a:items)
   while 1
     sign unplace 1
     let l:line_before = line('.')
@@ -297,6 +347,7 @@ function s:PromptLoop(items) abort
           \ l:line_before, bufnr('%'))
     redraw | echo l:prompt
     let l:char = s:GetChar()
+    let l:code = char2nr(l:char)
     if s:Contains(s:quit_chars, l:char)
       let l:action.type = s:exit_action
       break
@@ -311,6 +362,11 @@ function s:PromptLoop(items) abort
       let l:action.type = s:select_action
       let l:action.selection = l:item
       break
+    elseif l:code >=# s:code1 && l:code <=# s:code9
+      let l:item_id = s:ScanItemIdDigits(l:prompt, a:items[-1].id, [l:char])
+      if l:item_id !=# 0
+        execute 'normal! ' . l:item_line_lookup[l:item_id] . 'G'
+      endif
     elseif l:char ==# 'd'
       execute "normal! \<c-d>"
     elseif l:char ==# 'u'
@@ -344,7 +400,7 @@ function! menu#Menu(path) abort
   try
     echohl None
     if mode() !=# 'n'
-      throw 'Menu only available in normal mode'
+      throw 'Menu only available in normal mode.'
     endif
     silent! source $VIMRUNTIME/menu.vim
     let l:path = a:path
@@ -384,7 +440,7 @@ function! menu#Menu(path) abort
           let l:selection_id = 1
         endif
       else
-        throw 'Unsupported action'
+        throw 'Unsupported action.'
       endif
     endwhile
     redraw | echo
