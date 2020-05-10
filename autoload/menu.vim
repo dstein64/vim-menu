@@ -14,7 +14,7 @@ let s:up_chars = ['k', "\<up>"]
 let s:back_chars = ['h', "\<left>"]
 let s:select_chars = ['l', "\<right>", "\<cr>", "\<space>"]
 let s:quit_chars = ["\<esc>", 'Z', 'q']
-let s:shortcut_char = 's'
+let s:shortcut_char = 'g'
 
 let s:code0 = char2nr('0')
 let s:code1 = char2nr('1')
@@ -403,8 +403,6 @@ function! s:PromptLoop(items) abort
       execute "normal! \<c-d>"
     elseif l:char ==# 'u'
       execute "normal! \<c-u>"
-    elseif l:char ==# 'g'
-      normal! gg
     elseif s:Contains(['G', 'H', 'M', 'L', '{', '}'], l:char)
       execute 'normal! ' . l:char
     elseif l:char ==# 'K' && l:item.is_leaf
