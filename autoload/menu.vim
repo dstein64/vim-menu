@@ -452,9 +452,7 @@ endfunction
 " Sets relevant global state and returns information for restoring the
 " existing state.
 function! s:Init()
-  let l:state = {
-        \   'hlsearch': v:hlsearch,
-        \ }
+  let l:state = {'hlsearch': v:hlsearch}
   let v:hlsearch = 0
   return l:state
 endfunction
@@ -469,6 +467,9 @@ function! menu#Menu(path) abort
     echohl None
     if mode() !=# 'n'
       throw 'Menu only available in normal mode.'
+    endif
+    if &buftype ==# 'nofile' && bufname('%') ==# '[Command Line]'
+      throw 'Menu not available from the command-line window.'
     endif
     silent! source $VIMRUNTIME/menu.vim
     let l:path = a:path
