@@ -9,10 +9,9 @@ set cpo&vim
 if !exists(':Menu')
   command -range -nargs=? -complete=menu Menu
         \ <line1>,<line2>:call menu#Menu(<q-args>, <range>)
-endif
-
-if !hasmapto(':Menu')
-  silent! noremap <unique> <leader>m :Menu<cr>
+  if !hasmapto(':Menu')
+    silent! noremap <unique> <leader>m :Menu<cr>
+  endif
 endif
 
 sign define menu_selected linehl=MenuSelected
