@@ -21,6 +21,10 @@ let s:back_action = 3
 " Exclude ToolBar, PopUp, and TouchBar from the root menu.
 let s:root_exclusions = ['ToolBar', 'PopUp', 'TouchBar']
 
+" The same buffer is reused to prevent the buffer list numbers from getting
+" high from usage of vim-menu.
+let s:bufnr = 0
+
 " *************************************************
 " * Core
 " *************************************************
@@ -216,9 +220,6 @@ endfunction
 " opposed to per-buffer. This is not a problem here since the window is only
 " used for a menu (i.e., it's closed as part of usage)
 function! s:CreateMenu(parsed, path, id) abort
-  " TODO: temporarilty set state (e.g., no hlsearch)
-  " TODO: clear any existing menus (or possibly do this when items are
-  " selected)
   let l:parts = s:Unqualify(a:path)
   let l:not_avail_err = 'No available menus. See ":help creating-menus".'
   if len(a:parsed) <=# 1 | throw l:not_avail_err | endif
@@ -235,9 +236,18 @@ function! s:CreateMenu(parsed, path, id) abort
     let l:title = nr2char(0x2630) . ' ' . l:title
   endif
   if len(l:title) ==# 0 | let l:title = ' ' | endif
-  " TODO: reuse existing buffer so that usage doesn't make the buffer list
-  " numbers get high. As part of this, make the buffer read-only and hidden...
-  botright split +enew
+  " Create a buffer if a vim-menu buffer doesn't exist yet.
+  if s:bufnr ==# 0 | let s:bufnr = bufadd('') | endif
+  execute 'botright split +' . s:bufnr . 'b'
+  " Confirm that buffer is empty.
+  if line('$') !=# 1 || getline(1) != ''
+    throw 'Assertion failed.'
+  endif
+  setlocal buftype=nofile
+  setlocal noswapfile
+  setlocal nofoldenable
+  setlocal foldcolumn=0
+  setlocal nobuflisted
   setlocal scrolloff=0
   setlocal signcolumn=no
   setlocal nocursorline
@@ -439,7 +449,22 @@ function! s:Beep() abort
   execute "normal \<esc>"
 endfunction
 
+" Sets relevant global state and returns information for restoring the
+" existing state.
+function! s:Init()
+  let l:state = {
+        \   'hlsearch': v:hlsearch,
+        \ }
+  let v:hlsearch = 0
+  return l:state
+endfunction
+
+function! s:Restore(state)
+  let v:hlsearch = a:state['hlsearch']
+endfunction
+
 function! menu#Menu(path) abort
+  let l:state = s:Init()
   try
     echohl None
     if mode() !=# 'n'
@@ -457,7 +482,10 @@ function! menu#Menu(path) abort
     while 1
       let l:items = s:CreateMenu(l:parsed, l:path, l:selection_id)
       let l:action = s:PromptLoop(l:items)
-      bdelete!
+      " Clear content and close the buffer, which is re-used by subsequent
+      " vim-menu invocations.
+      normal! ggdG
+      close!
       if l:action.type ==# s:exit_action
         break
       elseif l:action.type ==# s:select_action
@@ -494,6 +522,7 @@ function! menu#Menu(path) abort
     call s:Beep()
   finally
     echohl None
+    call s:Restore(l:state)
   endtry
   if exists('l:execute_pending') | execute l:execute_pending | endif
 endfunction
