@@ -465,9 +465,6 @@ function! menu#Menu(path) abort
   let l:state = s:Init()
   try
     echohl None
-    if mode() !=# 'n'
-      throw 'Menu only available in normal mode.'
-    endif
     if &buftype ==# 'nofile' && bufname('%') ==# '[Command Line]'
       throw 'Menu not available from the command-line window.'
     endif
@@ -479,7 +476,7 @@ function! menu#Menu(path) abort
     endif
     let l:selection_ids = []
     let l:selection_id = 1
-    let l:parsed = s:ParseMenu(mode())
+    let l:parsed = s:ParseMenu('n')
     while 1
       let l:items = s:CreateMenu(l:parsed, l:path, l:selection_id)
       let l:action = s:PromptLoop(l:items)
