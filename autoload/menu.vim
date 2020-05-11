@@ -333,9 +333,6 @@ function! s:ScanItemIdDigits(prompt, item_count, ...)
       if str2nr(join(l:digits + ['0'], '')) ># a:item_count
         break
       endif
-      if len(l:digits) ==# len(string(a:item_count))
-        return 0
-      endif
     endif
     redraw | echo a:prompt . join(l:digits, '')
     call add(l:digits, s:GetChar())
