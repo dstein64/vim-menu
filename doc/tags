@@ -1,0 +1,10 @@
+:Menu	menu.txt	/*:Menu*
+g:menu_leaf_char	menu.txt	/*g:menu_leaf_char*
+g:menu_nonterm_char	menu.txt	/*g:menu_nonterm_char*
+menu-color-customization	menu.txt	/*menu-color-customization*
+menu-configuration	menu.txt	/*menu-configuration*
+menu-installation	menu.txt	/*menu-installation*
+menu-requirements	menu.txt	/*menu-requirements*
+menu-usage	menu.txt	/*menu-usage*
+menu.txt	menu.txt	/*menu.txt*
+vim-menu	menu.txt	/*vim-menu*

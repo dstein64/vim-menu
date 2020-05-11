@@ -1,0 +1,82 @@
+*menu.txt*         Provides a console interface to Vim's built-in menu
+*vim-menu*
+
+Author: Daniel Steinberg - https://www.dannyadam.com
+Web: https://github.com/dstein64/vim-menu
+
+1. Requirements                            |menu-requirements|
+2. Installation                            |menu-installation|
+3. Usage                                   |menu-usage|
+4. Configuration                           |menu-configuration|
+
+|vim-menu| provides a console interface to Vim's built-in menu.
+
+============================================================================
+1. Requirements                            *menu-requirements*
+
+* `vim` or `nvim`
+
+============================================================================
+2. Installation                            *menu-installation*
+
+Use |packages| or one of the various package managers.
+
+============================================================================
+3. Usage                                   *menu-usage*
+
+Vim comes with a default set of menu items. Add menu items using the built-in
+|:menu| command.
+                                                               *:Menu*
+Enter |vim-menu| with <leader>m or |:Menu|. These will not be clobbered in
+case they are already used.
+
+* Arrows, `hjkl` keys, and `<cr>` are used for movement and selection.
+* Number keys can be used to jump to menu items.
+* Press `g` followed by a shortcut key to execute the corresponding menu item.
+* Press `K` to show more information for the selected menu item.
+* Press `?` to show a help message.
+* Press <esc> to leave |vim-menu|.
+
+============================================================================
+4. Configuration                           *menu-configuration*
+
+By default, |vim-menu| is started with <leader>m or |:Menu|. These will not be
+clobbered in case they are already used.
+
+The following variables can be used to customize the behavior of |vim-menu|.
+
+`Variable`
+  Description                       `Default`
+-------------                       -------
+*g:menu_nonterm_char*                 `Right-pointing triangle`
+  Character to show for non-terminal
+  menu items.
+*g:menu_leaf_char*                    `Heavy asterisk`
+  Character to show for leaf menu
+  items.
+
+Color Customization ~
+                                           *menu-color-customization*
+The following highlight groups can be configured to change |vim-menu|'s
+colors.
+
+Name                 Default    Description
+----                 -------    -----------
+`MenuSelected`         `Visual`     Color for selected item
+`MenuId`               `LineNr`     Color for item ID
+`MenuLeafIcon`         `WarningMsg` Color for leaf icon
+`MenuNonTermIcon`      `Directory`  Color for non-terminal icon
+`MenuShortcut`         `ModeMsg`    Color for shortcut
+`MenuRightAlignedText` `MoreMsg`    Color for right-aligned text
+
+The highlight groups can be customized in your |.vimrc|, as shown in the
+following example.
+ >
+	" Link MenuShortcut highlight to Error highlight
+	highlight link MenuShortcut Error
+
+	" Specify custom highlighting for MenuId
+	highlight MenuId term=bold ctermfg=12 ctermbg=159 guifg=Blue guibg=LightCyan
+
+============================================================================
+ vim:tw=78:ts=4:ft=help:norl:

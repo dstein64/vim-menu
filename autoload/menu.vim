@@ -357,6 +357,20 @@ function! s:ShowItemInfo(item) abort
   echohl None
 endfunction
 
+function! s:ShowHelp() abort
+  redraw
+  echo '* Arrows, hjkl keys, and <cr> are used for movement and selection.'
+  echo '* Number keys can be used to jump to menu items.'
+  echo '* Press g followed by a shortcut key to execute the corresponding'
+  echon ' menu item.'
+  echo '* Press K to show more information for the selected menu item.'
+  echo '* Press <esc> to leave vim-menu.'
+  echohl Question
+  echon "\n[Press any key to continue]"
+  call s:GetChar() | redraw | echo ''
+  echohl None
+endfunction
+
 " Scans user input for a item ID. The first argument specifies the initial
 " output, the second argument specified the number of available items, and the
 " optional third argument specifies digits that have already been accumulated.
@@ -464,6 +478,8 @@ function! s:PromptLoop(items) abort
       execute 'normal! ' . l:char
     elseif l:char ==# 'K'
       call s:ShowItemInfo(l:item)
+    elseif l:char ==# '?'
+      call s:ShowHelp()
     endif
     let l:line_after = line('.')
     " Skip separators. Running this once assumes no consecutive separators,

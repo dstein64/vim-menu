@@ -38,8 +38,8 @@ Enter `vim-menu` with `<leader>m` or `:Menu`.
 
 * Arrows, `hjkl` keys, and `<cr>` are used for movement and selection.
 * Number keys can be used to jump to menu items.
-* Shortcut keys, prepended by `g`, can be used to execute menu items.
-* `K` will show more information for menu items.
+* Press `g` followed by a shortcut key to execute the corresponding menu item.
+* Press `K` to show more information for the selected menu item.
 * Press `?` to show a help message.
 * Press `<esc>` to leave `vim-menu`.
 
