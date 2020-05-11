@@ -59,6 +59,9 @@ function! s:ParseMenu(mode) abort
   let l:depth = -1
   let l:output = {}
   let l:stack = [{'children': []}]
+  " Maps menu paths to the shortcuts for that menu. This is for detecting
+  " whether a shortcut is a duplicate.
+  let l:shortcut_lookup = {}
   for l:idx in range(len(l:lines))
     let l:line = l:lines[l:idx]
     if l:line =~# '^ *\d'
@@ -77,8 +80,11 @@ function! s:ParseMenu(mode) abort
       " Find the first ampersand that's 1) not preceded by an ampersand and
       " 2) followed by a non-ampersand.
       let l:amp_idx = match(l:name, '\([^&]\|^\)\zs&[^&]')
+      let l:shortcut = ''
       if l:amp_idx !=# -1
         let l:name = substitute(l:name, '&', '', '')
+        let l:shortcut_code = strgetchar(l:name[l:amp_idx:], 0)
+        let l:shortcut = tolower(nr2char(l:shortcut_code))
       endif
       let l:name = substitute(l:name, '&&', '&', 'g')
       let l:is_separator = l:name =~# '^-.*-$'
@@ -89,11 +95,20 @@ function! s:ParseMenu(mode) abort
       let l:is_leaf = l:idx + 1 < len(l:lines)
             \ && l:lines[l:idx + 1] !~# '^ *\d'
       let l:path = s:Qualify(l:parents + [l:name])
+      let l:parents_path = s:Qualify(l:parents)
+      if !has_key(l:shortcut_lookup, l:parents_path)
+        let l:shortcut_lookup[l:parents_path] = {}
+      endif
+      let l:shortcuts = l:shortcut_lookup[l:parents_path]
+      let l:existing_shortcut = has_key(l:shortcuts, l:shortcut)
+      let l:shortcuts[l:shortcut] = 1
       let l:item = {
             \   'name': l:name,
             \   'subname': l:subname,
             \   'path': l:path,
             \   'amp_idx': l:amp_idx,
+            \   'shortcut': l:shortcut,
+            \   'existing_shortcut': l:existing_shortcut,
             \   'children': [],
             \   'is_separator': l:is_separator,
             \   'is_root': len(l:parents) ==# 0,
@@ -275,7 +290,7 @@ function! s:CreateMenu(parsed, path, id) abort
     let l:symbol_pos = [[line('$'), len(l:line) + 1, len(l:symbol)]]
     call matchaddpos(l:symbol_hl, l:symbol_pos)
     let l:line .= l:symbol . ' '
-    if l:item.amp_idx !=# -1
+    if l:item.amp_idx !=# -1 && !l:item.existing_shortcut
       let l:amp_pos = [[line('$'), len(l:line) + 1 + l:item.amp_idx, 1]]
       call matchaddpos('MenuShortcut', l:amp_pos)
     endif
@@ -318,7 +333,7 @@ function! s:ShowItemInfo(item) abort
   endwhile
   echohl Question
   echo '[Press any key to continue]'
-  call s:GetChar()
+  call s:GetChar() | redraw | echo
   echohl None
 endfunction
 
@@ -369,11 +384,10 @@ endfunction
 function! s:CreateShortcutLookup(items) abort
   let l:lookup = {}
   for l:item in a:items
-    if l:item.amp_idx ==# -1 | continue | endif
-    let l:code= strgetchar(l:item.name[l:item.amp_idx:], 0)
-    let l:char = nr2char(l:code)
-    let l:lower = tolower(l:char)
-    let l:lookup[l:lower] = l:item
+    if l:item.amp_idx ==# -1 || l:item.existing_shortcut
+      continue
+    endif
+    let l:lookup[l:item.shortcut] = l:item
   endfor
   return l:lookup
 endfunction
@@ -473,6 +487,15 @@ function! s:GetEmenuRange(first_line, last_line) abort
   return a:first_line . ',' . a:last_line
 endfunction
 
+function! s:CloseMenu() abort
+  " Clear content and close the buffer, which is re-used by subsequent
+  " vim-menu invocations.
+  if bufnr('%') ==# s:bufnr
+    normal! ggdG
+    close!
+  endif
+endfunction
+
 " 'path' is the menu path. 'range_count' is the number of items in the command
 " range. The range behavior is the same as used for 'emenu':
 "   The default is to use the Normal mode menu. If there is a range, the
@@ -497,10 +520,7 @@ function! menu#Menu(path, range_count) abort
     while 1
       let l:items = s:CreateMenu(l:parsed, l:path, l:selection_id)
       let l:action = s:PromptLoop(l:items)
-      " Clear content and close the buffer, which is re-used by subsequent
-      " vim-menu invocations.
-      normal! ggdG
-      close!
+      call s:CloseMenu()
       if l:action.type ==# s:exit_action
         break
       elseif l:action.type ==# s:select_action
@@ -535,13 +555,17 @@ function! menu#Menu(path, range_count) abort
     endwhile
     redraw | echo
   catch
+    call s:Beep()
+    call s:CloseMenu()
     echohl ErrorMsg
     if g:menu_debug_mode | echo v:throwpoint | endif
     echo 'vim-menu: ' . v:exception
-    call s:Beep()
+    echohl Question
+    echo '[Press any key to continue]'
+    call s:GetChar() | redraw | echo
   finally
-    echohl None
     call s:Restore(l:state)
+    echohl None
   endtry
   if exists('l:execute_pending') | execute l:execute_pending | endif
 endfunction
