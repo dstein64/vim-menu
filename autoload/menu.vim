@@ -495,18 +495,6 @@ function! s:Restore(state)
   let v:hlsearch = a:state['hlsearch']
 endfunction
 
-" Given the range arguments, prepare a range for calling 'emenu'. This follows
-" the same logic used for 'emenu': "When using a range, if the lines match
-" with '<,'>, then the menu is executed using the last visual selection."
-function! s:GetEmenuRange(first_line, last_line) abort
-  if a:first_line ==# getpos("'<'")[1]
-    if a:last_line ==# getpos("'>'")[1]
-      return "'<,'>"
-    endif
-  endif
-  return a:first_line . ',' . a:last_line
-endfunction
-
 function! s:CloseMenu() abort
   " Unload the the buffer. The buffer number is re-used by subsequent vim-menu
   " invocations. This was used instead of 'normal! ggdG' followed by 'close!',
@@ -548,7 +536,7 @@ function! menu#Menu(path, range_count) abort
         if l:action.selection.is_leaf 
           let l:range = ''
           if a:range_count ># 0
-            let l:range = s:GetEmenuRange(a:firstline, a:lastline)
+            let l:range = a:firstline . ',' . a:lastline
           endif
           let l:execute_pending = l:range . 'emenu ' . l:action.selection.path
           break
