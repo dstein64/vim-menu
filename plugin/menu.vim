@@ -11,6 +11,10 @@ if !exists(':Menu')
         \ <line1>,<line2>:call menu#Menu(<q-args>, <range>)
 endif
 
+if !hasmapto(':Menu')
+  silent! noremap <unique> <leader>m :Menu<cr>
+endif
+
 sign define menu_selected linehl=MenuSelected
 
 " ************************************************************
