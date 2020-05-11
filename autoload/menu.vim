@@ -323,23 +323,36 @@ endfunction
 
 " Display leaf item mapping, with special keys properly colored.
 function! s:ShowItemInfo(item) abort
-  let l:mapping = a:item.mapping[1]
   redraw
-  while strchars(l:mapping) ># 0
-    let l:match = matchstr(l:mapping, '^<[^ <>]\+>')
-    if l:match !=# ''
-      echohl SpecialKey
-      echon l:match
-      echohl None
-      let l:mapping = l:mapping[len(l:match):]
-    else
-      let l:char = strcharpart(l:mapping, 0, 1)
-      echon l:char
-      let l:mapping = l:mapping[len(l:char):]
-    endif
-  endwhile
+  echohl Title | echon 'shortcut: ' | echohl None
+  if a:item.amp_idx !=# -1 && !a:item.existing_shortcut
+    echohl SpecialKey | echon a:item.shortcut | echohl None
+  else
+    echohl WarningMsg | echon 'none' | echohl None
+  endif
+  echon "\n"
+  echohl Title | echon 'mapping:  ' | echohl None
+  if a:item.is_leaf
+    let l:mapping = a:item.mapping[1]
+    while strchars(l:mapping) ># 0
+      let l:match = matchstr(l:mapping, '^<[^ <>]\+>')
+      if l:match !=# ''
+        echohl SpecialKey
+        echon l:match
+        echohl None
+        let l:mapping = l:mapping[len(l:match):]
+      else
+        let l:char = strcharpart(l:mapping, 0, 1)
+        echon l:char
+        let l:mapping = l:mapping[len(l:char):]
+      endif
+    endwhile
+  else
+    echohl WarningMsg | echon 'none' | echohl None
+  endif
+  echon "\n"
   echohl Question
-  echo '[Press any key to continue]'
+  echon '[Press any key to continue]'
   call s:GetChar() | redraw | echo ''
   echohl None
 endfunction
@@ -449,7 +462,7 @@ function! s:PromptLoop(items) abort
       execute "normal! \<c-u>"
     elseif s:Contains(['G', 'H', 'M', 'L', '{', '}'], l:char)
       execute 'normal! ' . l:char
-    elseif l:char ==# 'K' && l:item.is_leaf
+    elseif l:char ==# 'K'
       call s:ShowItemInfo(l:item)
     endif
     let l:line_after = line('.')
