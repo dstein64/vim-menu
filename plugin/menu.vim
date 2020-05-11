@@ -29,7 +29,7 @@ let g:menu_debug_mode = get(g:, 'menu_debug_mode', 0)
 " :highlight WinInactive term=bold ctermfg=12 ctermbg=159 guifg=Blue guibg=LightCyan
 highlight default link MenuSelected Visual
 highlight default link MenuId LineNr
-highlight default link MenuLeafIcon Constant
+highlight default link MenuLeafIcon WarningMsg
 highlight default link MenuNonTermIcon Directory
 highlight default link MenuShortcut ModeMsg
 highlight default link MenuRightAlignedText MoreMsg

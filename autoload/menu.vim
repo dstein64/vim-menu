@@ -251,13 +251,20 @@ function! s:CreateMenu(parsed, path, id) abort
     let l:title = nr2char(0x2630) . ' ' . l:title
   endif
   if len(l:title) ==# 0 | let l:title = ' ' | endif
-  " Create a buffer if a vim-menu buffer doesn't exist yet.
-  if s:bufnr ==# 0 | let s:bufnr = bufadd('') | endif
-  execute 'botright split +' . s:bufnr . 'b'
-  " Confirm that buffer is empty.
-  if line('$') !=# 1 || getline(1) != ''
-    throw 'Assertion failed.'
-  endif
+  " Create a buffer if a vim-menu buffer doesn't exist yet, or the buffer has
+  " existing content.
+  for l:attempt in range(2)
+    if s:bufnr ==# 0 || l:attempt ==# 1
+      let s:bufnr = bufadd('')
+    endif
+    execute 'botright split +' . s:bufnr . 'b'
+    " Confirm that buffer is empty.
+    if line('$') ==# 1 && getline(1) ==# ''
+      break
+    elseif l:attempt ==# 1
+      throw 'Assertion failed.'
+    endif
+  endfor
   setlocal buftype=nofile
   setlocal noswapfile
   setlocal nofoldenable
@@ -333,7 +340,7 @@ function! s:ShowItemInfo(item) abort
   endwhile
   echohl Question
   echo '[Press any key to continue]'
-  call s:GetChar() | redraw | echo
+  call s:GetChar() | redraw | echo ''
   echohl None
 endfunction
 
@@ -488,11 +495,12 @@ function! s:GetEmenuRange(first_line, last_line) abort
 endfunction
 
 function! s:CloseMenu() abort
-  " Clear content and close the buffer, which is re-used by subsequent
-  " vim-menu invocations.
+  " Unload the the buffer. The buffer number is re-used by subsequent vim-menu
+  " invocations. This was used instead of 'normal! ggdG' followed by 'close!',
+  " as that approach caused file status to be displayed after leaving vim-menu
+  " (this occurred with 'hidden' set, but not otherwise).
   if bufnr('%') ==# s:bufnr
-    normal! ggdG
-    close!
+    bunload!
   endif
 endfunction
 
@@ -553,8 +561,9 @@ function! menu#Menu(path, range_count) abort
         throw 'Unsupported action.'
       endif
     endwhile
-    redraw | echo
+    redraw | echo ''
   catch
+    let l:error = 1
     call s:Beep()
     call s:CloseMenu()
     echohl ErrorMsg
@@ -562,10 +571,13 @@ function! menu#Menu(path, range_count) abort
     echo 'vim-menu: ' . v:exception
     echohl Question
     echo '[Press any key to continue]'
-    call s:GetChar() | redraw | echo
+    call s:GetChar() | redraw | echo ''
   finally
     call s:Restore(l:state)
     echohl None
+    redraw | echo ''
   endtry
-  if exists('l:execute_pending') | execute l:execute_pending | endif
+  if exists('l:execute_pending') && !get(l:, 'error', 0)
+    execute l:execute_pending
+  endif
 endfunction
