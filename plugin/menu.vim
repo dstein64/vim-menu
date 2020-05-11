@@ -7,7 +7,8 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 if !exists(':Menu')
-  command -nargs=? -complete=menu Menu :call menu#Menu(<q-args>)
+  command -range -nargs=? -complete=menu Menu
+        \ <line1>,<line2>:call menu#Menu(<q-args>, <range>)
 endif
 
 sign define menu_selected linehl=MenuSelected

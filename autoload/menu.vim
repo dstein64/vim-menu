@@ -103,7 +103,7 @@ function! s:ParseMenu(mode) abort
       call add(l:stack, l:item)
       let l:output[l:path] = l:item
       let l:depth = l:depth2
-    else
+    elseif l:line =~# '^ \+' . a:mode
       if has_key(l:stack[-1], 'mapping')
         throw 'Mapping already exists.'
       endif
@@ -461,7 +461,24 @@ function! s:Restore(state)
   let v:hlsearch = a:state['hlsearch']
 endfunction
 
-function! menu#Menu(path) abort
+" Given the range arguments, prepare a range for calling 'emenu'. This follows
+" the same logic used for 'emenu': "When using a range, if the lines match
+" with '<,'>, then the menu is executed using the last visual selection."
+function! s:GetEmenuRange(first_line, last_line) abort
+  if a:first_line ==# getpos("'<'")[1]
+    if a:last_line ==# getpos("'>'")[1]
+      return "'<,'>"
+    endif
+  endif
+  return a:first_line . ',' . a:last_line
+endfunction
+
+" 'path' is the menu path. 'range_count' is the number of items in the command
+" range. The range behavior is the same as used for 'emenu':
+"   The default is to use the Normal mode menu. If there is a range, the
+"   Visual mode menu is used. With a range, if the lines match the '< and '>
+"   marks, the menu is executed with the last visual selection.
+function! menu#Menu(path, range_count) abort
   let l:state = s:Init()
   try
     echohl None
@@ -476,7 +493,7 @@ function! menu#Menu(path) abort
     endif
     let l:selection_ids = []
     let l:selection_id = 1
-    let l:parsed = s:ParseMenu('n')
+    let l:parsed = s:ParseMenu(a:range_count > 0 ? 'v' : 'n')
     while 1
       let l:items = s:CreateMenu(l:parsed, l:path, l:selection_id)
       let l:action = s:PromptLoop(l:items)
@@ -488,7 +505,11 @@ function! menu#Menu(path) abort
         break
       elseif l:action.type ==# s:select_action
         if l:action.selection.is_leaf 
-          let l:execute_pending = 'emenu ' . l:action.selection.path
+          let l:range = ''
+          if a:range_count ># 0
+            let l:range = s:GetEmenuRange(a:firstline, a:lastline)
+          endif
+          let l:execute_pending = l:range . 'emenu ' . l:action.selection.path
           break
         else
           let l:path = l:action.selection.path
