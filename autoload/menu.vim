@@ -366,6 +366,7 @@ function! s:ShowHelp() abort
   echon ' item.'
   echo '* Press K to show more information for the selected item.'
   echo '* Press <esc> to leave vim-menu.'
+  echo '* vim-menu documentation can be accessed with ":help vim-menu".'
   echohl Question
   echon "\n[Press any key to continue]"
   call s:GetChar() | redraw | echo ''

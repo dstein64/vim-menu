@@ -24,10 +24,23 @@ Use |packages| or one of the various package managers.
 ============================================================================
 3. Usage                                   *menu-usage*
 
-Vim comes with a default set of menu items. Add menu items using the built-in
-|:menu| command.
+Vim comes with a default set of menu items, which are lazy-loaded on the
+first invocation of |vim-menu|. To prevent loading these default items, set
+`did_install_default_menus` and `did_install_syntax_menu` to `1`.
+ >
+	" The following can be added in your .vimrc to disable default menus.
+	let did_install_default_menus = 1
+	let did_install_syntax_menu = 1
+
+|:menu| and |:unmenu| can be used for adding and removing menu items. See
+|creating-menus| and |delete-menus| for documentation. In order to remove
+items from Vim's defaults, the menus should be manually loaded first (as
+opposed to waiting for |vim-menu| to lazy load them).
+ >
+	" The following can be added in your .vimrc to manually load Vim menus.
+	silent! source $VIMRUNTIME/menu.vim
                                                                *:Menu*
-Enter |vim-menu| with <leader>m or |:Menu|. These will not be clobbered in
+Enter |vim-menu| with `<leader>m` or |:Menu|. These will not be clobbered in
 case they are already used.
 
 * Arrows, `hjkl` keys, and `<cr>` are used for selecting and executing menu
