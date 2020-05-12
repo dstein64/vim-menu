@@ -56,7 +56,7 @@ The underlying markup is in [menu.txt](doc/menu.txt).
 
 ## Demo
 
-<img src="screencast.gif?raw=true" width="735"/>
+<img src="screencast.gif?raw=true" width="825"/>
 
 License
 -------
