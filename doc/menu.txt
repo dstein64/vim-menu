@@ -34,11 +34,13 @@ first invocation of |vim-menu|. To prevent loading these default items, set
 
 |:menu| and |:unmenu| can be used for adding and removing menu items. See
 |creating-menus| and |delete-menus| for documentation. In order to remove
-items from Vim's defaults, the menus should be manually loaded first (as
-opposed to waiting for |vim-menu| to lazy load them).
+individual items from Vim's default menus, the menus should first be loaded.
+This may require manual loading, as opposed to relying on |vim-menu| to
+lazy-load the menus.
  >
 	" The following can be added in your .vimrc to manually load Vim menus.
 	silent! source $VIMRUNTIME/menu.vim
+	" ...which can be followed by :unmenu commands to remove items.
                                                                *:Menu*
 Enter |vim-menu| with `<leader>m` or |:Menu|. These will not be clobbered in
 case they are already used.
