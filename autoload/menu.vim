@@ -566,17 +566,10 @@ function! menu#Menu(path, range_count) abort
         endif
       elseif l:action.type ==# s:back_action
         if l:path ==# '' | break | endif
+        if (len(l:selection_ids) ==# 0) | break | endif
         let l:parts = s:Unqualify(l:path)
         let l:path = s:Qualify(l:parts[:-2])
-        if len(l:selection_ids) ># 0
-          let l:selection_id = remove(l:selection_ids, -1)
-        elseif len(l:parts) ==# 1 && s:Contains(s:root_exclusions, l:parts[0])
-          " For items excluded from the root menu, don't go back to the root
-          " menu.
-          break
-        else
-          let l:selection_id = 1
-        endif
+        let l:selection_id = remove(l:selection_ids, -1)
       else
         throw 'Unsupported action.'
       endif
