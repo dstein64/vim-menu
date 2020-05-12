@@ -177,7 +177,7 @@ function! s:FilterMenuItems(items, root) abort
 endfunction
 
 " Attach an ID to menu items. IDs start at 1 and increment for non-separators.
-" IDs start at -1 and decrement for non-separators.
+" IDs start at -1 and decrement for separators.
 function! s:AttachId(items)
   let l:items = deepcopy(a:items[:])
   let l:id = 1
