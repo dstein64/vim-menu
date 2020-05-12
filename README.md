@@ -40,7 +40,7 @@ Enter `vim-menu` with `<leader>m` or `:Menu`.
   items.
 * Number keys can be used to jump to items.
 * Press `g` followed by a shortcut key to execute the corresponding item.
-* Press `K` to show more information for the active item.
+* Press `K` to show more information for the selected item.
 * Press `?` to show a help message.
 * Press `<esc>` to leave `vim-menu`.
 
