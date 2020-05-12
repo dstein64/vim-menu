@@ -576,9 +576,10 @@ function! menu#Menu(path, range_count) abort
     endwhile
     redraw | echo ''
   catch
+    " The buffer is not closed on error, since it's possible it's not a
+    " vim-menu buffer.
     let l:error = 1
     call s:Beep()
-    call s:CloseMenu()
     echohl ErrorMsg
     if g:menu_debug_mode | echo v:throwpoint | endif
     echo 'vim-menu: ' . v:exception
