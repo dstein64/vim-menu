@@ -2,7 +2,7 @@
 
 `vim-menu` is a plugin providing a console interface to Vim's built-in menu.
 
-<img src="screenshot.png?raw=true" width="400"/>
+<img src="screenshot.png?raw=true" width="200"/>
 
 ## Requirements
 
