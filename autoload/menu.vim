@@ -359,6 +359,7 @@ endfunction
 
 function! s:ShowHelp() abort
   redraw
+  echohl Title | echo 'vim-menu help' | echohl None
   echo '* Arrows, hjkl keys, and <cr> are used for selecting and executing'
   echon ' menu items.'
   echo '* Number keys can be used to jump to items.'
