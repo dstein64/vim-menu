@@ -359,11 +359,12 @@ endfunction
 
 function! s:ShowHelp() abort
   redraw
-  echo '* Arrows, hjkl keys, and <cr> are used for movement and selection.'
-  echo '* Number keys can be used to jump to menu items.'
+  echo '* Arrows, hjkl keys, and <cr> are used for selecting and executing'
+  echon ' menu items.'
+  echo '* Number keys can be used to jump to items.'
   echo '* Press g followed by a shortcut key to execute the corresponding'
-  echon ' menu item.'
-  echo '* Press K to show more information for the selected menu item.'
+  echon ' item.'
+  echo '* Press K to show more information for the selected item.'
   echo '* Press <esc> to leave vim-menu.'
   echohl Question
   echon "\n[Press any key to continue]"

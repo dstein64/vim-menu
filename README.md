@@ -36,10 +36,11 @@ Vim comes with a default set of menu items. Add menu items using the built-in
 
 Enter `vim-menu` with `<leader>m` or `:Menu`.
 
-* Arrows, `hjkl` keys, and `<cr>` are used for movement and selection.
-* Number keys can be used to jump to menu items.
-* Press `g` followed by a shortcut key to execute the corresponding menu item.
-* Press `K` to show more information for the selected menu item.
+* Arrows, `hjkl` keys, and `<cr>` are used for selecting and executing menu
+  items.
+* Number keys can be used to jump to items.
+* Press `g` followed by a shortcut key to execute the corresponding item.
+* Press `K` to show more information for the active item.
 * Press `?` to show a help message.
 * Press `<esc>` to leave `vim-menu`.
 
