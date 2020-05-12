@@ -31,8 +31,10 @@ Use one of the following package managers:
 
 ## Usage
 
-Vim comes with a default set of menu items. Add menu items using the built-in
-`:menu` command.
+Vim comes with a default set of menu items. `:menu` and `:unmenu` can be used
+for adding and removing menu items. See `:help creating-menus` and
+`:help delete-menus` for documentation. See `vim-menu`'s documentation for
+details on modifying or disabling the default menus.
 
 Enter `vim-menu` with `<leader>m` or `:Menu`.
 
