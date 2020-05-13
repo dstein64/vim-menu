@@ -257,7 +257,7 @@ function! s:CreateMenu(parsed, path, id) abort
     if s:bufnr ==# 0 || l:attempt ==# 1
       let s:bufnr = bufadd('')
     endif
-    execute 'botright split +' . s:bufnr . 'b'
+    execute 'silent! botright split +' . s:bufnr . 'buffer'
     " Confirm that buffer is empty.
     if line('$') ==# 1 && getline(1) ==# ''
       break
@@ -515,12 +515,9 @@ function! s:Restore(state)
 endfunction
 
 function! s:CloseMenu() abort
-  " Unload the the buffer. The buffer number is re-used by subsequent vim-menu
-  " invocations. This was used instead of 'normal! ggdG' followed by 'close!',
-  " as that approach caused file status to be displayed after leaving vim-menu
-  " (this occurred with 'hidden' set, but not otherwise).
   if bufnr('%') ==# s:bufnr
-    bunload!
+    normal! ggdG
+    close!
   endif
 endfunction
 
