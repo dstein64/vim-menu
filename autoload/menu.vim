@@ -517,20 +517,31 @@ function! s:PrepMenuBufAndWin() abort
   setlocal bufhidden=hide
 endfunction
 
+function! s:ShowError(msg) abort
+  call s:Beep()
+  echohl ErrorMsg
+  echo a:msg
+  echohl Question
+  echo '[Press any key to continue]'
+  call s:GetChar() | redraw | echo ''
+endfunction
+
 " 'path' is the menu path. 'range_count' is the number of items in the command
 " range. The range behavior is the same as used for 'emenu':
 "   The default is to use the Normal mode menu. If there is a range, the
 "   Visual mode menu is used. With a range, if the lines match the '< and '>
 "   marks, the menu is executed with the last visual selection.
 function! menu#Menu(path, range_count) abort
+  if &buftype ==# 'nofile' && bufname('%') ==# '[Command Line]'
+    let l:msg = 'vim-menu: Menu not available from the command-line window.'
+    call s:ShowError(l:msg)
+    return
+  endif
   let l:prior_winid = win_getid()
   let l:state = s:Init()
   call s:PrepMenuBufAndWin()
   try
     echohl None
-    if &buftype ==# 'nofile' && bufname('%') ==# '[Command Line]'
-      throw 'Menu not available from the command-line window.'
-    endif
     silent! source $VIMRUNTIME/menu.vim
     let l:path = a:path
     " Remove trailing dot if present (inserted by -complete=menu)
@@ -572,13 +583,12 @@ function! menu#Menu(path, range_count) abort
     redraw | echo ''
   catch
     let l:error = 1
-    call s:Beep()
-    echohl ErrorMsg
-    if g:menu_debug_mode | echo v:throwpoint | endif
-    echo 'vim-menu: ' . v:exception
-    echohl Question
-    echo '[Press any key to continue]'
-    call s:GetChar() | redraw | echo ''
+    let l:msg = ''
+    if g:menu_debug_mode
+      let l:msg .= v:throwpoint . "\n"
+    endif
+    let l:msg .= 'vim-menu: ' . v:exception
+    call s:ShowError(l:msg)
   finally
     call s:ClearBuffer()
     " Close the vim-menu window.
