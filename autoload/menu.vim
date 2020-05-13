@@ -86,7 +86,7 @@ function! s:ParseMenu(mode) abort
         let l:shortcut_code = strgetchar(l:name[l:amp_idx:], 0)
         let l:shortcut = tolower(nr2char(l:shortcut_code))
       endif
-      let l:name = substitute(l:name, '&&', '&', 'g')
+      let l:name = substitute(l:name, '&&', '\&', 'g')
       let l:is_separator = l:name =~# '^-.*-$'
       let l:parents = []
       for l:parent in l:stack[2:]
