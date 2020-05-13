@@ -532,6 +532,7 @@ endfunction
 function! menu#Menu(path, range_count) abort
   let l:state = s:Init()
   try
+    let l:winnr = winnr()
     echohl None
     if &buftype ==# 'nofile' && bufname('%') ==# '[Command Line]'
       throw 'Menu not available from the command-line window.'
@@ -574,6 +575,8 @@ function! menu#Menu(path, range_count) abort
         throw 'Unsupported action.'
       endif
     endwhile
+    " Return to the initial window from prior to loading menu.
+    execute l:winnr . 'wincmd w'
     redraw | echo ''
   catch
     " The buffer is not closed on error, since it's possible it's not a
