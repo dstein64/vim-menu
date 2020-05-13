@@ -540,6 +540,8 @@ function! menu#Menu(path, range_count) abort
   let l:prior_winid = win_getid()
   let l:state = s:Init()
   call s:PrepMenuBufAndWin()
+  " The lines above are intentially left outside the try block, so that
+  " assumptions in the catch and finally blocks are satisfied.
   try
     echohl None
     silent! source $VIMRUNTIME/menu.vim
