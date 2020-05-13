@@ -52,6 +52,8 @@ endfunction
 
 " Returns a dictionary that maps each menu path to the corresponding menu
 " item.
+" XXX: Neovim has a built-in function, menu_get(), that returns a List of
+" Dictionaries describing menus. However, this is not available in Vim.
 function! s:ParseMenu(mode) abort
   let l:lines = split(execute(a:mode . 'menu'), '\n')[1:]
   call map(l:lines, '"  " . v:val')
