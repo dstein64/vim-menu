@@ -511,6 +511,7 @@ function! s:PrepMenuBufAndWin() abort
   setlocal nocursorline
   setlocal nonumber
   setlocal norelativenumber
+  setlocal bufhidden=hide
 endfunction
 
 " 'path' is the menu path. 'range_count' is the number of items in the command
