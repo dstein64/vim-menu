@@ -528,8 +528,8 @@ endfunction
 "   marks, the menu is executed with the last visual selection.
 function! menu#Menu(path, range_count) abort
   let l:state = s:Init()
+  let l:winid = win_getid()
   try
-    let l:winnr = winnr()
     echohl None
     if &buftype ==# 'nofile' && bufname('%') ==# '[Command Line]'
       throw 'Menu not available from the command-line window.'
@@ -572,11 +572,9 @@ function! menu#Menu(path, range_count) abort
         throw 'Unsupported action.'
       endif
     endwhile
-    " Return to the initial window from prior to loading menu.
-    execute l:winnr . 'wincmd w'
     redraw | echo ''
   catch
-    " The buffer is not closed on error, since it's possible it's not a
+    " The menu buffer is not closed on error, since it's possible it's not a
     " vim-menu buffer.
     let l:error = 1
     call s:Beep()
@@ -587,6 +585,8 @@ function! menu#Menu(path, range_count) abort
     echo '[Press any key to continue]'
     call s:GetChar() | redraw | echo ''
   finally
+    " Return to the initial window from prior to loading menu.
+    call win_gotoid(l:winid)
     call s:Restore(l:state)
     echohl None
     redraw | echo ''
