@@ -22,7 +22,7 @@ let s:back_action = 3
 let s:root_exclusions = ['ToolBar', 'PopUp', 'TouchBar']
 
 " The same buffer is reused to prevent the buffer list numbers from getting
-" high from usage of vim-menu.
+" high from usage of vim-menu. This is not a constant.
 let s:bufnr = 0
 
 " *************************************************
@@ -233,7 +233,7 @@ endfunction
 " Show the specified menu, with the specified item selected. 'matchadd' and
 " 'matchaddpos' are used for colorization. This is applied per-window, as
 " opposed to per-buffer. This is not a problem here since the window is only
-" used for a menu (i.e., it's closed as part of usage)
+" used for a menu (i.e., it's closed as part of usage).
 function! s:CreateMenu(parsed, path, id) abort
   let l:parts = s:Unqualify(a:path)
   let l:not_avail_err = 'No available menus. See ":help creating-menus".'
@@ -251,25 +251,6 @@ function! s:CreateMenu(parsed, path, id) abort
     let l:title = nr2char(0x2630) . ' ' . l:title
   endif
   if len(l:title) ==# 0 | let l:title = ' ' | endif
-  " Create a buffer if a vim-menu buffer doesn't exist yet.
-  if s:bufnr ==# 0
-    let s:bufnr = bufadd('')
-  endif
-  execute 'silent! botright split +' . s:bufnr . 'buffer'
-  " Confirm that buffer is empty.
-  if line('$') !=# 1 || getline(1) !=# ''
-    throw 'Buffer was modified.'
-  endif
-  setlocal buftype=nofile
-  setlocal noswapfile
-  setlocal nofoldenable
-  setlocal foldcolumn=0
-  setlocal nobuflisted
-  setlocal scrolloff=0
-  setlocal signcolumn=no
-  setlocal nocursorline
-  setlocal nonumber
-  setlocal norelativenumber
   let &l:statusline = l:title
   " The last item can't be a separator, so don't have to handle the different
   " indexing used for separators.
@@ -509,9 +490,27 @@ function! s:Restore(state)
   let v:hlsearch = a:state['hlsearch']
 endfunction
 
-function! s:CloseMenu() abort
+function! s:ClearBuffer() abort
   normal! ggdG
-  close
+endfunction
+
+" Create a buffer if a vim-menu buffer doesn't exist. Load the vim-menu buffer
+" in a new window.
+function! s:PrepMenuBufAndWin() abort
+  if s:bufnr ==# 0 || !buffer_exists(s:bufnr)
+    let s:bufnr = bufadd('')
+  endif
+  execute 'silent! botright split +' . s:bufnr . 'buffer'
+  setlocal buftype=nofile
+  setlocal noswapfile
+  setlocal nofoldenable
+  setlocal foldcolumn=0
+  setlocal nobuflisted
+  setlocal scrolloff=0
+  setlocal signcolumn=no
+  setlocal nocursorline
+  setlocal nonumber
+  setlocal norelativenumber
 endfunction
 
 " 'path' is the menu path. 'range_count' is the number of items in the command
@@ -520,9 +519,9 @@ endfunction
 "   Visual mode menu is used. With a range, if the lines match the '< and '>
 "   marks, the menu is executed with the last visual selection.
 function! menu#Menu(path, range_count) abort
+  let l:prior_winid = win_getid()
   let l:state = s:Init()
-  let l:winid = win_getid()
-  let l:menu_winid = 0
+  call s:PrepMenuBufAndWin()
   try
     echohl None
     if &buftype ==# 'nofile' && bufname('%') ==# '[Command Line]'
@@ -538,10 +537,9 @@ function! menu#Menu(path, range_count) abort
     let l:selection_id = 1
     let l:parsed = s:ParseMenu(a:range_count > 0 ? 'v' : 'n')
     while 1
+      call s:ClearBuffer()
       let l:items = s:CreateMenu(l:parsed, l:path, l:selection_id)
-      let l:menu_winid = win_getid()
       let l:action = s:PromptLoop(l:items)
-      call s:CloseMenu()
       if l:action.type ==# s:exit_action
         break
       elseif l:action.type ==# s:select_action
@@ -569,9 +567,6 @@ function! menu#Menu(path, range_count) abort
     endwhile
     redraw | echo ''
   catch
-    if l:menu_winid !=# 0 && l:menu_winid ==# win_getid()
-      call s:CloseMenu()
-    endif
     let l:error = 1
     call s:Beep()
     echohl ErrorMsg
@@ -581,8 +576,11 @@ function! menu#Menu(path, range_count) abort
     echo '[Press any key to continue]'
     call s:GetChar() | redraw | echo ''
   finally
+    call s:ClearBuffer()
+    " Close the vim-menu window.
+    close
     " Return to the initial window from prior to loading menu.
-    call win_gotoid(l:winid)
+    call win_gotoid(l:prior_winid)
     call s:Restore(l:state)
     echohl None
     redraw | echo ''
