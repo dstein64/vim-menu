@@ -251,20 +251,15 @@ function! s:CreateMenu(parsed, path, id) abort
     let l:title = nr2char(0x2630) . ' ' . l:title
   endif
   if len(l:title) ==# 0 | let l:title = ' ' | endif
-  " Create a buffer if a vim-menu buffer doesn't exist yet, or the buffer has
-  " existing content.
-  for l:attempt in range(2)
-    if s:bufnr ==# 0 || l:attempt ==# 1
-      let s:bufnr = bufadd('')
-    endif
-    execute 'silent! botright split +' . s:bufnr . 'buffer'
-    " Confirm that buffer is empty.
-    if line('$') ==# 1 && getline(1) ==# ''
-      break
-    elseif l:attempt ==# 1
-      throw 'Assertion failed.'
-    endif
-  endfor
+  " Create a buffer if a vim-menu buffer doesn't exist yet.
+  if s:bufnr ==# 0
+    let s:bufnr = bufadd('')
+  endif
+  execute 'silent! botright split +' . s:bufnr . 'buffer'
+  " Confirm that buffer is empty.
+  if line('$') !=# 1 || getline(1) !=# ''
+    throw 'Buffer was modified.'
+  endif
   setlocal buftype=nofile
   setlocal noswapfile
   setlocal nofoldenable
@@ -515,10 +510,8 @@ function! s:Restore(state)
 endfunction
 
 function! s:CloseMenu() abort
-  if bufnr('%') ==# s:bufnr
-    normal! ggdG
-    close!
-  endif
+  normal! ggdG
+  close
 endfunction
 
 " 'path' is the menu path. 'range_count' is the number of items in the command
@@ -529,6 +522,7 @@ endfunction
 function! menu#Menu(path, range_count) abort
   let l:state = s:Init()
   let l:winid = win_getid()
+  let l:menu_winid = 0
   try
     echohl None
     if &buftype ==# 'nofile' && bufname('%') ==# '[Command Line]'
@@ -545,6 +539,7 @@ function! menu#Menu(path, range_count) abort
     let l:parsed = s:ParseMenu(a:range_count > 0 ? 'v' : 'n')
     while 1
       let l:items = s:CreateMenu(l:parsed, l:path, l:selection_id)
+      let l:menu_winid = win_getid()
       let l:action = s:PromptLoop(l:items)
       call s:CloseMenu()
       if l:action.type ==# s:exit_action
@@ -574,8 +569,9 @@ function! menu#Menu(path, range_count) abort
     endwhile
     redraw | echo ''
   catch
-    " The menu buffer is not closed on error, since it's possible it's not a
-    " vim-menu buffer.
+    if l:menu_winid !=# 0 && l:menu_winid ==# win_getid()
+      call s:CloseMenu()
+    endif
     let l:error = 1
     call s:Beep()
     echohl ErrorMsg
