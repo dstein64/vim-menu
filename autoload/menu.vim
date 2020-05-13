@@ -494,6 +494,7 @@ endfunction
 
 function! s:ClearBuffer() abort
   normal! ggdG
+  call clearmatches()
 endfunction
 
 " Create a buffer if a vim-menu buffer doesn't exist. Load the vim-menu buffer
