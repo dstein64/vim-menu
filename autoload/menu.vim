@@ -293,7 +293,8 @@ function! s:CreateMenu(parsed, path, id) abort
     call append(line('$') - 1, l:line)
   endfor
   call matchadd('MenuID', '^ *\zs\[\d\+\]\ze')
-  normal! Gddgg0
+  $delete _
+  normal! gg
   execute 'resize ' . line('$')
   execute 'normal! ' . l:selected_line . 'G'
   return l:items
@@ -493,7 +494,7 @@ function! s:Restore(state)
 endfunction
 
 function! s:ClearBuffer() abort
-  normal! ggdG
+  %delete _
   call clearmatches()
 endfunction
 
