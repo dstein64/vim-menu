@@ -338,17 +338,38 @@ endfunction
 
 function! s:ShowHelp() abort
   redraw
-  echohl Title | echo 'vim-menu help' | echohl None
-  echo '* Arrows, hjkl keys, and <cr> are used for selecting and executing'
-  echon ' menu items.'
-  echo '* Number keys can be used to jump to items.'
-  echo '* Press g followed by a shortcut key to execute the corresponding'
-  echon ' item.'
-  echo '* Press K to show more information for the selected item.'
-  echo '* Press <esc> to leave vim-menu.'
-  echo '* Documentation can be accessed with the command ":help vim-menu".'
-  echohl Question
-  echon "\n[Press any key to continue]"
+  let colored_text = [
+        \   ['Title', 'vim-menu help'],
+        \   ['None', "\n"],
+        \   ['None', '* Arrows, '],
+        \   ['SpecialKey', 'hjkl'],
+        \   ['None', ' keys, and '],
+        \   ['SpecialKey', '<cr>'],
+        \   ['None', ' are used for selecting and executing menu items.'],
+        \   ['None', "\n"],
+        \   ['None', '* Press '],
+        \   ['SpecialKey', 'g'],
+        \   ['None', ' followed by a shortcut key to execute the '],
+        \   ['None', 'corresponding item.'],
+        \   ['None', "\n"],
+        \   ['None', '* Press '],
+        \   ['SpecialKey', 'K'],
+        \   ['None', ' to show more information for the selected item.'],
+        \   ['None', "\n"],
+        \   ['None', '* Press '],
+        \   ['SpecialKey', '<esc>'],
+        \   ['None', ' to leave vim-menu.'],
+        \   ['None', "\n"],
+        \   ['None', '* Documenation can be accessed with the command '],
+        \   ['ModeMsg', ':help vim-menu'],
+        \   ['None', '.'],
+        \   ['None', "\n"],
+        \   ['Question', '[Press any key to continue]'],
+        \ ]
+  for [l:color, l:text] in l:colored_text
+    execute 'echohl ' . l:color
+    echon l:text
+  endfor
   call s:GetChar() | redraw | echo ''
   echohl None
 endfunction
