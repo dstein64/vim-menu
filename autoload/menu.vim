@@ -337,39 +337,40 @@ function! s:ShowItemInfo(item) abort
 endfunction
 
 function! s:ShowHelp() abort
-  redraw
-  let colored_text = [
-        \   ['Title', 'vim-menu help'],
-        \   ['None', "\n"],
-        \   ['None', '* Arrows, '],
-        \   ['SpecialKey', 'hjkl'],
-        \   ['None', ' keys, and '],
-        \   ['SpecialKey', '<cr>'],
-        \   ['None', ' are used for selecting and executing menu items.'],
-        \   ['None', "\n"],
-        \   ['None', '* Press '],
-        \   ['SpecialKey', 'g'],
-        \   ['None', ' followed by a shortcut key to execute the '],
-        \   ['None', 'corresponding item.'],
-        \   ['None', "\n"],
-        \   ['None', '* Press '],
-        \   ['SpecialKey', 'K'],
-        \   ['None', ' to show more information for the selected item.'],
-        \   ['None', "\n"],
-        \   ['None', '* Press '],
-        \   ['SpecialKey', '<esc>'],
-        \   ['None', ' to leave vim-menu.'],
-        \   ['None', "\n"],
-        \   ['None', '* Documenation can be accessed with the command '],
-        \   ['ModeMsg', ':help vim-menu'],
-        \   ['None', '.'],
-        \   ['None', "\n"],
-        \   ['Question', '[Press any key to continue]'],
+  let l:lines = [
+        \   '* Arrows, `hjkl` keys, and `<cr>` are used for selecting and'
+        \   . ' executing menu items.',
+        \   '* Number keys can be used to jump to items.',
+        \   '* Press `g` followed by a shortcut key to execute the corresponding'
+        \   . ' item.',
+        \   '* Press `K` to show more information for the selected item.',
+        \   '* Press `<esc>` to leave vim-menu.',
+        \   '* Documentation can be accessed with the command |:help vim-menu|.',
         \ ]
-  for [l:color, l:text] in l:colored_text
-    execute 'echohl ' . l:color
-    echon l:text
+  redraw
+  echohl Title | echo 'vim-menu help'
+  echohl None
+  echon "\n"
+  " The state is 0 for normal text, 1 for text inside backticks, and 2 for
+  " text inside vertical bars. All states are assumed mutually exclusive
+  " (e.g., no backticks within vertical bars).
+  let l:state = 0
+  let l:highlight_lookup = ['None', 'SpecialKey', 'WarningMsg']
+  for l:char in split(join(l:lines, "\n"), '\zs')
+    if l:char ==# '`'
+      let l:state = l:state ==# 1 ? 0 : 1
+      execute 'echohl ' . l:highlight_lookup[l:state]
+      continue
+    elseif l:char ==# '|'
+      let l:state = l:state ==# 2 ? 0 : 2
+      execute 'echohl ' . l:highlight_lookup[l:state]
+      continue
+    endif
+    echon l:char
   endfor
+  echon "\n"
+  echohl Question
+  echon "[Press any key to continue]"
   call s:GetChar() | redraw | echo ''
   echohl None
 endfunction
