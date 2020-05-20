@@ -10,7 +10,8 @@
 
 ## Installation
 
-Use one of the following package managers:
+A package manager can be used to install `vim-menu`.
+<details><summary>Examples</summary><br>
 
 * [Vim8 packages][vim8pack]:
   - `git clone https://github.com/dstein64/vim-menu ~/.vim/pack/plugins/start/vim-menu`
@@ -28,6 +29,7 @@ Use one of the following package managers:
 * [NeoBundle][neobundle]:
   - Add `NeoBundle 'dstein64/vim-menu'` to `~/.vimrc`
   - Re-open vim or execute `:source ~/.vimrc`
+</details>
 
 ## Usage
 
