@@ -29,6 +29,7 @@ A package manager can be used to install `vim-menu`.
 * [NeoBundle][neobundle]:
   - Add `NeoBundle 'dstein64/vim-menu'` to `~/.vimrc`
   - Re-open vim or execute `:source ~/.vimrc`
+
 </details>
 
 ## Usage
