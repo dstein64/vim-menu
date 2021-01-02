@@ -62,11 +62,11 @@ clobbered in case they are already used.
 The following variables can be used to customize the behavior of |vim-menu|.
 
 `Variable`
-  Description                       Default
+  Description                       `Default`
 -------------                       -------
 *g:menu_nonterm_char*                 `Right-pointing triangle` when assumed
-  Character to show for              available and `greater-than sign`
-  non-terminal menu items.           otherwise
+  Character to show for             available and `greater-than sign`
+  non-terminal menu items.          otherwise
 *g:menu_leaf_char*                    `Heavy asterisk` when assumed available
   Character to show for leaf menu   and `asterisk` otherwise
   items.
