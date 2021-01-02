@@ -16,6 +16,23 @@ endif
 
 sign define menu_selected linehl=MenuSelected
 
+" *************************************************
+" * Utils
+" *************************************************
+
+" Returns true if Vim is running on Windows Subsystem for Linux.
+function! s:OnWsl()
+  " Recent versions of neovim provide a 'wsl' pseudo-feature.
+  if has('wsl') | return 1 | endif
+  if has('unix') && executable('uname')
+    let l:uname = system('uname -a')
+    if stridx(l:uname, 'Microsoft') ># -1
+      return 1
+    endif
+  endif
+  return 0
+endfunction
+
 " ************************************************************
 " * User Configuration
 " ************************************************************
@@ -37,7 +54,13 @@ highlight default link MenuNonTermIcon Directory
 highlight default link MenuShortcut ModeMsg
 highlight default link MenuRightAlignedText MoreMsg
 
-if has('multi_byte') && &encoding ==# 'utf-8'
+" The built-in Windows terminal emulator (used for CMD, Powershell, and WSL)
+" does not properly display the Unicode right-pointing triangle and heavy
+" asterisk, using the default font, Consolas. The characters display properly
+" on Cygwin using its default font, Lucida Console, and also when using
+" Consolas.
+let s:win_term = has('win32') || s:OnWsl()
+if !s:win_term && has('multi_byte') && &encoding ==# 'utf-8'
   " Right-pointing triangle
   let s:default_nonterm_char = nr2char(0x25B6)
   " Heavy asterisk
