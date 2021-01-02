@@ -213,6 +213,11 @@ function! s:GetChar()
   if type(l:char) ==# v:t_number
     let l:char = nr2char(l:char)
   endif
+  " On Cygwin, pressing <c-c> during getchar() does not raise "Vim:Interrupt",
+  " so it would still be <c-c> at this point. Convert to <esc>.
+  if l:char ==# "\<c-c>"
+    let l:char = "\<esc>"
+  endif
   return l:char
 endfunction
 
@@ -375,7 +380,7 @@ function! s:ShowHelp() abort
   echohl None
 endfunction
 
-" Scans user input for a item ID. The first argument specifies the initial
+" Scans user input for an item ID. The first argument specifies the initial
 " output, the second argument specified the number of available items, and the
 " optional third argument specifies digits that have already been accumulated.
 function! s:ScanItemIdDigits(prompt, item_count, ...)
