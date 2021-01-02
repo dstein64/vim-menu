@@ -45,7 +45,7 @@ lazy-load the menus.
 Enter |vim-menu| with `<leader>m` or |:Menu|. These will not be clobbered in
 case they are already used.
 
-* Arrows, `hjkl` keys, and `<cr>` are used for selecting and executing menu
+* Arrows, `hjkl` keys, and <cr> are used for selecting and executing menu
   items.
 * Number keys can be used to jump to items.
 * Press `g` followed by a shortcut key to execute the corresponding item.
