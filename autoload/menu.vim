@@ -26,6 +26,24 @@ let s:root_exclusions = ['ToolBar', 'PopUp', 'TouchBar']
 let s:bufnr = 0
 
 " *************************************************
+" * Utils
+" *************************************************
+
+" Returns true if Vim is running on Windows Subsystem for Linux. This is not
+" script-local since it's called from plugin/menu.vim.
+function! menu#OnWsl()
+  " Recent versions of neovim provide a 'wsl' pseudo-feature.
+  if has('wsl') | return 1 | endif
+  if has('unix') && executable('uname')
+    let l:uname = system('uname -a')
+    if stridx(l:uname, 'Microsoft') ># -1
+      return 1
+    endif
+  endif
+  return 0
+endfunction
+
+" *************************************************
 " * Core
 " *************************************************
 
@@ -255,7 +273,16 @@ function! s:CreateMenu(parsed, path, id) abort
   let l:title = join(l:parts, ' > ')
   if has('multi_byte') && &encoding ==# 'utf-8'
     " Hamburger button
-    let l:title = nr2char(0x2630) . ' ' . l:title
+    let l:icon = nr2char(0x2630)
+    " The built-in Windows terminal emulator (used for CMD, Powershell, and
+    " WSL) does not properly display the Unicode hamburger button, using the
+    " default font, Consolas. The character displays properly on Cygwin using
+    " its default font, Lucida Console, and also when using Consolas.
+    if has('win32') || menu#OnWsl()
+      " Triple bar
+      let l:icon = nr2char(0x2261)
+    endif
+    let l:title = l:icon . ' ' . l:title
   endif
   if len(l:title) ==# 0 | let l:title = ' ' | endif
   let &l:statusline = l:title
