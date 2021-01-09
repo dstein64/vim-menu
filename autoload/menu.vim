@@ -586,7 +586,10 @@ endfunction
 "   The default is to use the Normal mode menu. If there is a range, the
 "   Visual mode menu is used. With a range, if the lines match the '< and '>
 "   marks, the menu is executed with the last visual selection.
-function! menu#Menu(path, range_count) abort
+" 'view' is a dictionary returned by 'winsaveview' that will be immediately
+" restored with 'winrestview'.
+function! menu#Menu(path, range_count, view) range abort
+  call winrestview(a:view)
   if &buftype ==# 'nofile' && bufname('%') ==# '[Command Line]'
     let l:msg = 'vim-menu: Menu not available from the command-line window.'
     call s:ShowError(l:msg)

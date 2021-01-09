@@ -7,8 +7,13 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 if !exists(':Menu')
+  " Save the view and pass it to menu#Menu for immediately restoring, since
+  " passing a range to menu#Menu will result in the cursor being moved to the
+  " first column of the first line in the range (even with no selection,
+  " cursor would be moved to the first column).
   command -range -nargs=? -complete=menu Menu
-        \ <line1>,<line2>:call menu#Menu(<q-args>, <range>)
+        \ let s:view = winsaveview()
+        \ | <line1>,<line2>:call menu#Menu(<q-args>, <range>, s:view)
   if !hasmapto(':Menu')
     silent! noremap <unique> <leader>m :Menu<cr>
   endif
