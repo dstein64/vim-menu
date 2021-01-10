@@ -659,7 +659,17 @@ function! menu#Menu(path, range_count, view) range abort
     echohl None
     redraw | echo ''
   endtry
-  if exists('l:execute_pending') && !get(l:, 'error', 0)
-    execute l:execute_pending
+  if !get(l:, 'error', 0)
+    if exists('l:execute_pending')
+      execute l:execute_pending
+    elseif a:range_count ># 0
+      " If no command was executed (i.e., exit action or back action out of
+      " menu), and the user had a visual selection (assumed by positive
+      " range_count), restore the visual selection. This is intentially not
+      " executed on error (some steps leading up to error may have been
+      " executed, whereby visual selection would not ordinarily be restored
+      " even in the absence of an error).
+      normal gv
+    endif
   endif
 endfunction
