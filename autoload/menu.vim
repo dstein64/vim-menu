@@ -629,7 +629,7 @@ function! menu#Menu(path, range_count, view) range abort
           if a:range_count ># 0
             let l:range = a:firstline . ',' . a:lastline
           endif
-          let l:execute_pending = l:range . 'emenu ' . l:action.selection.path
+          let l:pending = l:range . ':emenu ' . l:action.selection.path
           break
         else
           let l:path = l:action.selection.path
@@ -666,8 +666,14 @@ function! menu#Menu(path, range_count, view) range abort
     redraw | echo ''
   endtry
   if !get(l:, 'error', 0)
-    if exists('l:execute_pending')
-      execute l:execute_pending
+    if exists('l:pending')
+      " Execute the pending command with 'feedkeys', as opposed to 'execute'.
+      " This accomodates commands that result in command-line mode (e.g.,
+      " ':menu File.Save\ As :saveas ' for loading ':saveas ' with
+      " anticipation for a file argument) or operator-pending mode (e.g.,
+      " ':menu Edit.Format gw' for formatting the text corresponding to the
+      " motion that follows, when there is no visual selection).
+      call feedkeys(l:pending . "\n", 'n')
     elseif a:range_count ># 0
       " If no command was executed (i.e., exit action or back action out of
       " menu), and the user had a visual selection (assumed by positive
