@@ -668,7 +668,7 @@ function! menu#Menu(path, range_count, view) range abort
   if !get(l:, 'error', 0)
     if exists('l:pending')
       " Execute the pending command with 'feedkeys', as opposed to 'execute'.
-      " This accomodates commands that result in command-line mode (e.g.,
+      " This accommodates commands that result in command-line mode (e.g.,
       " ':menu File.Save\ As :saveas ' for loading ':saveas ' with
       " anticipation for a file argument) or operator-pending mode (e.g.,
       " ':menu Edit.Format gw' for formatting the text corresponding to the
