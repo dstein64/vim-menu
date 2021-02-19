@@ -538,7 +538,7 @@ function! s:PromptLoop(items) abort
 endfunction
 
 function! s:Beep() abort
-  execute "normal \<esc>"
+  execute "normal! \<esc>"
 endfunction
 
 " Sets relevant global state and returns information for restoring the
@@ -681,7 +681,7 @@ function! menu#Menu(path, range_count, view) range abort
       " executed on error (some steps leading up to error may have been
       " executed, whereby visual selection would not ordinarily be restored
       " even in the absence of an error).
-      normal gv
+      normal! gv
     endif
   endif
 endfunction
