@@ -414,7 +414,7 @@ function! s:ShowHelp() abort
 endfunction
 
 " Scans user input for an item ID. The first argument specifies the initial
-" output, the second argument specified the number of available items, and the
+" output, the second argument specifies the number of available items, and the
 " optional third argument specifies digits that have already been accumulated.
 function! s:ScanItemIdDigits(prompt, item_count, ...)
   let l:digits = get(a:, 1, [])[:]
