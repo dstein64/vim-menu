@@ -1,3 +1,5 @@
+[![build][badge_thumbnail]][badge_link]
+
 # vim-menu
 
 `vim-menu` is a plugin providing a console interface to Vim's built-in menu.
@@ -70,6 +72,8 @@ The source code has an [MIT License](https://en.wikipedia.org/wiki/MIT_License).
 
 See [LICENSE](LICENSE).
 
+[badge_link]: https://github.com/dstein64/vim-menu/actions/workflows/build.yml
+[badge_thumbnail]: https://github.com/dstein64/vim-menu/actions/workflows/build.yml/badge.svg
 [dein]: https://github.com/Shougo/dein.vim
 [neobundle]: https://github.com/Shougo/neobundle.vim
 [pathogen]: https://github.com/tpope/vim-pathogen
