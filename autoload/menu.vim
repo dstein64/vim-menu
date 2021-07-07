@@ -416,8 +416,8 @@ endfunction
 " Scans user input for an item ID. The first argument specifies the initial
 " output, the second argument specifies the number of available items, and the
 " optional third argument specifies digits that have already been accumulated.
-function! s:ScanItemIdDigits(prompt, item_count, ...)
-  let l:digits = get(a:, 1, [])[:]
+function! s:ScanItemIdDigits(prompt, item_count, digits=[])
+  let l:digits = a:digits[:]
   for l:digit in l:digits
     let l:code = char2nr(l:digit)
     if l:code <# s:code0 || l:code ># s:code9 | return 0 | endif
