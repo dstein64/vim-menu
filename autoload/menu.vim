@@ -74,11 +74,11 @@ function! s:Unqualify(qualified) abort
   return l:parts
 endfunction
 
-" Returns a dictionary that maps each menu path to the corresponding menu
-" item.
-" XXX: Neovim has a built-in function, menu_get(), that returns a List of
-" Dictionaries describing menus. However, this is not available in Vim.
-function! s:ParseMenu(mode) abort
+function! s:ParseMenuLua(mode) abort
+  return luaeval('require("menu").parse_menu(_A)', a:mode)
+endfunction
+
+function! s:ParseMenuVimScript(mode) abort
   let l:lines = split(execute(a:mode . 'menu'), '\n')[1:]
   call map(l:lines, '"  " . v:val')
   let l:lines = ['0 '] + l:lines
@@ -156,6 +156,20 @@ function! s:ParseMenu(mode) abort
     endif
   endfor
   return l:output
+endfunction
+
+" Returns a dictionary that maps each menu path to the corresponding menu
+" item.
+" XXX: Neovim has a built-in function, menu_get(), that returns a List of
+" Dictionaries describing menus. This is not used.
+function! s:ParseMenu(mode) abort
+  if has('nvim-0.4')
+    " A Lua function is used for its improved speed.
+    let l:parsed = s:ParseMenuLua(a:mode)
+  else
+    let l:parsed = s:ParseMenuVimScript(a:mode)
+  endif
+  return l:parsed
 endfunction
 
 " Returns true if all leaves under an item are disabled or <Nop>.
