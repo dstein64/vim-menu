@@ -59,6 +59,7 @@ else
 endif
 let g:menu_nonterm_char = get(g:, 'menu_nonterm_char', s:default_nonterm_char)
 let g:menu_leaf_char = get(g:, 'menu_leaf_char', s:default_leaf_char)
+let g:menu_caching = get(g:, 'menu_caching', 1)
 
 let &cpo = s:save_cpo
 unlet s:save_cpo

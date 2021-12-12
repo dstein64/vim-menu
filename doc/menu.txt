@@ -70,6 +70,10 @@ The following variables can be used to customize the behavior of |vim-menu|.
 *g:menu_leaf_char*                    `Heavy asterisk` when assumed available
   Character to show for leaf menu   and `asterisk` otherwise
   items.
+*g:menu_caching*                      `1`
+  Whether caching is used for
+  quicker loading, at the cost of
+  higher memory usage.
 
 Color Customization ~
                                            *menu-color-customization*

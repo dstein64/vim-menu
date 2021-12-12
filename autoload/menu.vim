@@ -173,8 +173,10 @@ function! s:ParseMenu(mode) abort
   else
     let l:parsed = s:ParseMenuVimScript(a:mode)
   endif
-  let s:parse_cache_key = l:parse_cache_key
-  let s:parse_cache_val = l:parsed
+  if g:menu_caching
+    let s:parse_cache_key = l:parse_cache_key
+    let s:parse_cache_val = l:parsed
+  endif
   return l:parsed
 endfunction
 

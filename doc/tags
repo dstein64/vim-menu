@@ -1,4 +1,5 @@
 :Menu	menu.txt	/*:Menu*
+g:menu_caching	menu.txt	/*g:menu_caching*
 g:menu_leaf_char	menu.txt	/*g:menu_leaf_char*
 g:menu_nonterm_char	menu.txt	/*g:menu_nonterm_char*
 menu-color-customization	menu.txt	/*menu-color-customization*
