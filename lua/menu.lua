@@ -48,7 +48,7 @@ local parse_menu = function(mode)
           table.remove(stack)
         end
       end
-      local full_name = line:sub(fn.matchstrpos(line, ' *\\d\\+ ')[3] + 1)
+      local _, _, full_name = line:find('^ *%d+ (.*)$')
       local name, subname = unpack({full_name, ''})
       local tab_start, tab_end = full_name:find('%^I')
       if tab_start ~= nil then
@@ -57,15 +57,23 @@ local parse_menu = function(mode)
       end
       -- Find the first ampersand that's 1) not preceded by an ampersand and 2)
       -- followed by a non-ampersand.
-      local amp_idx = fn.match(name, '\\([^&]\\|^\\)\\zs&[^&]')
+      local amp_idx = name:find('&')
+      if amp_idx == nil then
+        amp_idx = -1
+      else
+        while name:sub(amp_idx + 1, amp_idx + 1) == '&' do
+          amp_idx = amp_idx + 1
+        end
+        amp_idx = amp_idx - 1
+      end
       local shortcut = ''
       if amp_idx ~= -1 then
         name = name:gsub('&', '', 1)
         shortcut_code = fn.strgetchar(name:sub(amp_idx + 1), 0)
         shortcut = fn.tolower(fn.nr2char(shortcut_code))
       end
-      name = fn.substitute(name, '&&', '\\&', 'g')
-      local is_separator = fn.match(name, '^-.*-$') > -1
+      name = name:gsub('&&', '&')
+      local is_separator = name:find('^-.*-$') ~= nil
       local parents = {}
       for _, parent in ipairs({unpack(stack, 3)}) do
         table.insert(parents, parent.name)
