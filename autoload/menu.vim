@@ -163,6 +163,14 @@ endfunction
 " XXX: Neovim has a built-in function, menu_get(), that returns a List of
 " Dictionaries describing menus. This is not used.
 function! s:ParseMenu(mode) abort
+  if !g:menu_caching
+    if has_key(s:, 'parse_cache_key')
+      unlet s:parse_cache_key
+    endif
+    if has_key(s:, 'parse_cache_val')
+      unlet s:parse_cache_val
+    endif
+  endif
   let l:parse_cache_key = execute(a:mode . 'menu')
   if has_key(s:, 'parse_cache_key') && l:parse_cache_key ==# s:parse_cache_key
     return s:parse_cache_val
