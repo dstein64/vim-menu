@@ -163,12 +163,18 @@ endfunction
 " XXX: Neovim has a built-in function, menu_get(), that returns a List of
 " Dictionaries describing menus. This is not used.
 function! s:ParseMenu(mode) abort
+  let l:parse_cache_key = execute(a:mode . 'menu')
+  if has_key(s:, 'parse_cache_key') && l:parse_cache_key ==# s:parse_cache_key
+    return s:parse_cache_val
+  endif
   if has('nvim-0.4')
     " A Lua function is used for its improved speed.
     let l:parsed = s:ParseMenuLua(a:mode)
   else
     let l:parsed = s:ParseMenuVimScript(a:mode)
   endif
+  let s:parse_cache_key = l:parse_cache_key
+  let s:parse_cache_val = l:parsed
   return l:parsed
 endfunction
 
