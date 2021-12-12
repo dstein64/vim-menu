@@ -20,10 +20,10 @@ end
 local qualify = function(path)
   path = vim.deepcopy(path)
   table.foreach(path, function(k, v)
-    path[k] = fn.substitute(path[k], '\\.', '\\\\.', 'g')
+    path[k] = path[k]:gsub('%.', '\\%.')
   end)
   table.foreach(path, function(k, v)
-    path[k] = fn.substitute(path[k], '\\ ', '\\\\ ', 'g')
+    path[k] = path[k]:gsub(' ', '\\ ')
   end)
   return table.concat(path, '.')
 end
@@ -41,7 +41,7 @@ local parse_menu = function(mode)
   local shortcut_lookup = {}
   for idx = 1, #lines do
     local line = lines[idx]
-    if fn.match(line, '^ *\\d') > -1 then
+    if line:find('^%s*%d') ~= nil then
       local depth2 = math.floor(#fn.matchstr(line, '^ *') / 2)
       if depth2 <= depth then
         for x = 1, depth - depth2 + 1 do
