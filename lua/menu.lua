@@ -20,10 +20,10 @@ end
 local qualify = function(path)
   path = vim.deepcopy(path)
   table.foreach(path, function(k, v)
-    path[k] = path[k]:gsub('%.', '\\%.')
+    path[k] = v:gsub('%.', '\\%.')
   end)
   table.foreach(path, function(k, v)
-    path[k] = path[k]:gsub(' ', '\\ ')
+    path[k] = v:gsub(' ', '\\ ')
   end)
   return table.concat(path, '.')
 end
@@ -44,7 +44,7 @@ local parse_menu = function(mode)
     if line:find('^ *%d') ~= nil then
       local depth2 = math.floor(({line:find('^ *')})[2] / 2)
       if depth2 <= depth then
-        for x = 1, depth - depth2 + 1 do
+        for _ = 1, depth - depth2 + 1 do
           table.remove(stack)
         end
       end
@@ -69,7 +69,7 @@ local parse_menu = function(mode)
       local shortcut = ''
       if amp_idx ~= -1 then
         name = name:gsub('&', '', 1)
-        shortcut_code = fn.strgetchar(name:sub(amp_idx + 1), 0)
+        local shortcut_code = fn.strgetchar(name:sub(amp_idx + 1), 0)
         shortcut = fn.tolower(fn.nr2char(shortcut_code))
       end
       name = name:gsub('&&', '&')
