@@ -42,25 +42,25 @@ local parse_menu = function(mode)
   for idx = 1, #lines do
     local line = lines[idx]
     if line:find('^%s*%d') ~= nil then
-      local depth2 = math.floor(#fn.matchstr(line, '^ *') / 2)
+      local depth2 = math.floor(({line:find('^%s*')})[2] / 2)
       if depth2 <= depth then
         for x = 1, depth - depth2 + 1 do
           table.remove(stack)
         end
       end
       local full_name = line:sub(fn.matchstrpos(line, ' *\\d\\+ ')[3] + 1)
-      local name, subname
-      if fn.match(full_name, '\\^I') > -1 then
-        name, subname = unpack(fn.split(full_name, '\\^I'))
-      else
-        name, subname = unpack({full_name, ''})
+      local name, subname = unpack({full_name, ''})
+      local tab_start, tab_end = full_name:find('%^I')
+      if tab_start ~= nil then
+        name = full_name:sub(1, tab_start - 1)
+        subname = full_name:sub(tab_end + 1)
       end
       -- Find the first ampersand that's 1) not preceded by an ampersand and 2)
       -- followed by a non-ampersand.
       local amp_idx = fn.match(name, '\\([^&]\\|^\\)\\zs&[^&]')
       local shortcut = ''
       if amp_idx ~= -1 then
-        name = fn.substitute(name, '&', '', '')
+        name = name:gsub('&', '', 1)
         shortcut_code = fn.strgetchar(name:sub(amp_idx + 1), 0)
         shortcut = fn.tolower(fn.nr2char(shortcut_code))
       end
