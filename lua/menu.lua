@@ -41,8 +41,8 @@ local parse_menu = function(mode)
   local shortcut_lookup = {}
   for idx = 1, #lines do
     local line = lines[idx]
-    if line:find('^%s*%d') ~= nil then
-      local depth2 = math.floor(({line:find('^%s*')})[2] / 2)
+    if line:find('^ *%d') ~= nil then
+      local depth2 = math.floor(({line:find('^ *')})[2] / 2)
       if depth2 <= depth then
         for x = 1, depth - depth2 + 1 do
           table.remove(stack)
@@ -70,7 +70,7 @@ local parse_menu = function(mode)
       for _, parent in ipairs({unpack(stack, 3)}) do
         table.insert(parents, parent.name)
       end
-      local is_leaf = idx < #lines and fn.match(lines[idx + 1], '^ *\\d') == -1
+      local is_leaf = idx < #lines and lines[idx + 1]:find('^ *%d') == nil
       local path_items = vim.deepcopy(parents)
       table.insert(path_items, name)
       local path = qualify(path_items)
@@ -97,7 +97,7 @@ local parse_menu = function(mode)
       table.insert(stack, item)
       output[path] = item
       depth = depth2
-    elseif fn.match(line, '^ \\+' .. mode) > -1 then
+    elseif line:find('^ +' .. mode) ~= nil then
       if stack[#stack].mapping ~= nil then
         error('Mapping already exists.')
       end
