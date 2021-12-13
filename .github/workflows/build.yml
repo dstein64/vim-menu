@@ -31,4 +31,7 @@ jobs:
       run: luacheck .
 
     - name: Tests
-      run: tests/run.py
+      run: |
+        mkdir -p ~/.local/share/nvim/site/pack/plugins/start/
+        ln -s . ~/.local/share/nvim/site/pack/plugins/start/
+        tests/run.py

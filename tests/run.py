@@ -14,7 +14,6 @@ project_dir = os.path.join(test_dir, os.path.pardir)
 test_scripts = sorted(glob.glob(os.path.join(test_dir, 'test_*.vim')))
 errors = []
 template = Template("""
-set runtimepath+=${project_dir}
 try
   source ${file}
 catch
