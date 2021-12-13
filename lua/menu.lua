@@ -55,28 +55,30 @@ local parse_menu = function(mode)
         name = full_name:sub(1, tab_start - 1)
         subname = full_name:sub(tab_end + 1)
       end
-      -- Find the first ampersand that's 1) not preceded by an ampersand and 2)
-      -- followed by a non-ampersand.
-      local amp_idx = name:find('&')
-      while amp_idx ~= nil do
-        if amp_idx == 1 or name:sub(amp_idx - 1, amp_idx - 1) ~= '&' then
-          if amp_idx < #name and name:sub(amp_idx + 1, amp_idx + 1) ~= '&' then
-            amp_idx = amp_idx - 1
-            break
-          end
-        end
-        amp_idx = name:find('&', amp_idx + 1)
+
+      -- Temporarily replace double ampersands with DEL.
+      local special_char = 127  -- <DEL>
+      if name:find(string.char(special_char)) ~= nil then
+        error('Unsupported menu')
       end
-      if amp_idx == nil then
-        amp_idx = -1
+      name = name:gsub('&&', string.char(special_char))
+      local amp_idx = -1
+      local amp_idx2 = name:find('&')
+      if amp_idx2 ~= nil then
+        amp_idx = amp_idx2 - 1
       end
+      name = name:gsub('&', '')
       local shortcut = ''
       if amp_idx ~= -1 then
-        name = name:gsub('&', '', 1)
-        local shortcut_code = fn.strgetchar(name:sub(amp_idx + 1), 0)
-        shortcut = fn.tolower(fn.nr2char(shortcut_code))
+        if amp_idx < #name then
+          local shortcut_code = fn.strgetchar(name:sub(amp_idx + 1), 0)
+          shortcut = fn.tolower(fn.nr2char(shortcut_code))
+        else
+          amp_idx = -1
+        end
       end
-      name = name:gsub('&&', '&')
+      -- Restore double ampersands as single ampersands.
+      name = name:gsub(string.char(special_char), '&')
       local is_separator = name:find('^-.*-$') ~= nil
       local parents = {}
       for _, parent in ipairs({unpack(stack, 3)}) do

@@ -103,16 +103,25 @@ function! s:ParseMenuVimScript(mode) abort
       else
         let [l:name, l:subname] = [l:full_name, '']
       endif
-      " Find the first ampersand that's 1) not preceded by an ampersand and
-      " 2) followed by a non-ampersand.
-      let l:amp_idx = match(l:name, '\([^&]\|^\)\zs&[^&]')
+      " Temporarily replace double ampersands with DEL.
+      let l:special_char = 127  " <DEL>
+      if match(l:name, nr2char(l:special_char)) !=# -1
+        throw 'Unsupported menu'
+      endif
+      let l:name = substitute(l:name, '&&', nr2char(l:special_char), 'g')
+      let l:amp_idx = match(l:name, '&')
+      let l:name = substitute(l:name, '&', '', 'g')
       let l:shortcut = ''
       if l:amp_idx !=# -1
-        let l:name = substitute(l:name, '&', '', '')
-        let l:shortcut_code = strgetchar(l:name[l:amp_idx:], 0)
-        let l:shortcut = tolower(nr2char(l:shortcut_code))
+        if l:amp_idx <# len(l:name)
+          let l:shortcut_code = strgetchar(l:name[l:amp_idx:], 0)
+          let l:shortcut = tolower(nr2char(l:shortcut_code))
+        else
+          let l:amp_idx = -1
+        endif
       endif
-      let l:name = substitute(l:name, '&&', '\&', 'g')
+      " Restore double ampersands as single ampersands.
+      let l:name = substitute(l:name, nr2char(l:special_char), '\&', 'g')
       let l:is_separator = l:name =~# '^-.*-$'
       let l:parents = []
       for l:parent in l:stack[2:]
