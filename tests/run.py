@@ -14,6 +14,7 @@ project_dir = os.path.join(test_dir, os.path.pardir)
 test_scripts = sorted(glob.glob(os.path.join(test_dir, 'test_*.vim')))
 errors = []
 template = Template("""
+set runtimepath+=${project_dir}
 try
   source ${file}
 catch
@@ -25,10 +26,10 @@ for test_script in test_scripts:
     with tempfile.TemporaryDirectory() as tmp:
         runner_script = os.path.join(tmp, 'runner.vim')
         with open(runner_script, 'w') as f:
-            f.write(template.substitute(file=test_script))
+            f.write(template.substitute(
+                project_dir=project_dir, file=test_script))
         args = [
             'nvim',
-            '-c', 'set runtimepath+=' + project_dir,
             '-n',  # no swap file
             '-e',  # start in Ex mode
             '-s',  # silent mode
