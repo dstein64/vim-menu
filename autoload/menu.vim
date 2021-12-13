@@ -617,9 +617,18 @@ function! s:ShowError(msg) abort
   call s:GetChar() | redraw | echo ''
 endfunction
 
+function s:Sid() abort
+  return matchstr(expand('<sfile>'), '\zs<SNR>\d\+_\zeSid$')
+endfunction
+
 " Returns the script ID, for testing functions with internal visibility.
 function! menu#Sid() abort
-  return expand('<SID>')
+  let l:sid = expand('<SID>')
+  if !empty(l:sid)
+    return l:sid
+  endif
+  " Older versions of Vim cannot expand "<SID>".
+  return s:Sid()
 endfunction
 
 " 'path' is the menu path. 'range_count' is the number of items in the command

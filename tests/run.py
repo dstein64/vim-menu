@@ -17,7 +17,7 @@ template = Template("""
 try
   source ${file}
 catch
-  call assert_report(v:exception)
+  call assert_report(v:throwpoint . ': ' . v:exception)
 endtry
 verbose echo join(v:errors, "\\n")
 """)
