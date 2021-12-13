@@ -20,6 +20,7 @@ catch
   call assert_report(v:throwpoint . ': ' . v:exception)
 endtry
 verbose echo join(v:errors, "\\n")
+quitall!
 """)
 for test_script in test_scripts:
     with tempfile.TemporaryDirectory() as tmp:
@@ -33,7 +34,6 @@ for test_script in test_scripts:
             '-e',  # start in Ex mode
             '-s',  # silent mode
             '-S', runner_script,  # source the test runner script
-            '-c', 'quitall!'
         ]
         result = subprocess.run(args, capture_output=True)
     lines = result.stderr.decode('ascii').splitlines()
