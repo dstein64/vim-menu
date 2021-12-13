@@ -27,3 +27,7 @@ jobs:
         sudo apt-get update
         sudo apt-get install lua-check
         luacheck .
+
+    - name: Tests
+      run: |
+        tests/run.py

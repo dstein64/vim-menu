@@ -617,6 +617,11 @@ function! s:ShowError(msg) abort
   call s:GetChar() | redraw | echo ''
 endfunction
 
+" Returns the script ID, for testing functions with internal visibility.
+function! menu#Sid() abort
+  return expand('<SID>')
+endfunction
+
 " 'path' is the menu path. 'range_count' is the number of items in the command
 " range. The range behavior is the same as used for 'emenu':
 "   The default is to use the Normal mode menu. If there is a range, the
