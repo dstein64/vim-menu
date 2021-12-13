@@ -64,6 +64,7 @@ local parse_menu = function(mode)
           if i == 1 or name:sub(i - 1, i - 1) ~= '&' then
             if name:sub(i + 1, i + 1) ~= '&' then
               amp_idx = i - 1
+              break
             end
           end
         end
