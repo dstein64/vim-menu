@@ -57,14 +57,16 @@ local parse_menu = function(mode)
       end
       -- Find the first ampersand that's 1) not preceded by an ampersand and 2)
       -- followed by a non-ampersand.
-      local amp_idx = name:find('&')
-      if amp_idx == nil then
-        amp_idx = -1
-      else
-        while name:sub(amp_idx + 1, amp_idx + 1) == '&' do
-          amp_idx = amp_idx + 1
+      local amp_idx = -1
+      for i = 1, #name - 1 do
+        local c = name:sub(i, i)
+        if c == '&' then
+          if i == 1 or name:sub(i - 1, i - 1) ~= '&' then
+            if name:sub(i + 1, i + 1) ~= '&' then
+              amp_idx = i - 1
+            end
+          end
         end
-        amp_idx = amp_idx - 1
       end
       local shortcut = ''
       if amp_idx ~= -1 then
