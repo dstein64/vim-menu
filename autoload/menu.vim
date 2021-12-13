@@ -617,10 +617,6 @@ function! s:ShowError(msg) abort
   call s:GetChar() | redraw | echo ''
 endfunction
 
-function s:Sid() abort
-  return matchstr(expand('<sfile>'), '\zs<SNR>\d\+_\zeSid$')
-endfunction
-
 " Returns the script ID, for testing functions with internal visibility.
 function! menu#Sid() abort
   let l:sid = expand('<SID>')
@@ -628,6 +624,11 @@ function! menu#Sid() abort
     return l:sid
   endif
   " Older versions of Vim cannot expand "<SID>".
+  if !exists('*s:Sid')
+    function s:Sid() abort
+      return matchstr(expand('<sfile>'), '\zs<SNR>\d\+_\zeSid$')
+    endfunction
+  endif
   return s:Sid()
 endfunction
 
