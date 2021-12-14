@@ -16,7 +16,7 @@ local bool_to_int = function(bool)
   end
 end
 
--- Given a menu item path (as a list), return its qualified name.
+-- (documented in autoload/menu.vim)
 local qualify = function(path)
   path = vim.deepcopy(path)
   table.foreach(path, function(k, v)
@@ -28,7 +28,7 @@ local qualify = function(path)
   return table.concat(path, '.')
 end
 
--- Returns a dictionary that maps each menu path to the corresponding menu item.
+-- (documented in autoload/menu.vim)
 local parse_menu = function(mode)
   local lines = {unpack(fn.split(fn.execute(mode .. 'menu'), '\n'), 2)}
   table.foreach(lines, function(k, v) lines[k] = '  ' .. v end)
@@ -55,7 +55,6 @@ local parse_menu = function(mode)
         name = full_name:sub(1, tab_start - 1)
         subname = full_name:sub(tab_end + 1)
       end
-
       -- Temporarily replace double ampersands with DEL.
       local special_char = 127  -- <DEL>
       if name:find(string.char(special_char)) ~= nil then
