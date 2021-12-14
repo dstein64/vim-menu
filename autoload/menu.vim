@@ -617,6 +617,7 @@ function! s:PrepMenuBufAndWin() abort
   setlocal nonumber
   setlocal norelativenumber
   setlocal bufhidden=hide
+  setlocal nospell
 endfunction
 
 function! s:ShowError(msg) abort
