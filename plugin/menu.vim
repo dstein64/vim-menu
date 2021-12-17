@@ -43,16 +43,15 @@ highlight default link MenuShortcut ModeMsg
 highlight default link MenuRightAlignedText MoreMsg
 
 " The built-in Windows terminal emulator (used for CMD, Powershell, and WSL)
-" does not properly display the Unicode right-pointing triangle and heavy
-" asterisk, using the default font, Consolas. The characters display properly
-" on Cygwin using its default font, Lucida Console, and also when using
-" Consolas.
+" does not properly display the Unicode right-pointing triangle and diamond,
+" using the default font, Consolas. The characters display properly on Cygwin
+" using its default font, Lucida Console, and also when using Consolas.
 let s:win_term = has('win32') || menu#OnWsl()
 if !s:win_term && has('multi_byte') && &encoding ==# 'utf-8'
   " Right-pointing triangle
   let s:default_nonterm_char = nr2char(0x25B6)
-  " Heavy asterisk
-  let s:default_leaf_char = nr2char(0x2731)
+  " Diamond
+  let s:default_leaf_char = nr2char(0x25C6)
 else
   let s:default_nonterm_char = '>'
   let s:default_leaf_char = '*'
