@@ -1,5 +1,3 @@
-" TODO: Add scrollbars or some way of indicating that a menu can be scrolled.
-
 " *************************************************
 " * Globals
 " *************************************************
