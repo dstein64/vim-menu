@@ -371,7 +371,8 @@ function! s:CreateMenu(parsed, path, id) abort
       let l:line .= l:item.subname
     endif
     if l:item.is_separator
-      " Include spaces so the scrollbar is visible.
+      " Include spaces so the scrollbar is visible, since matchaddpos does not
+      " highlight positions with no characters.
       let l:line = ' '
     endif
     if l:item.id ==# a:id | let l:selected_line = line('$') | endif
