@@ -606,9 +606,15 @@ function! s:PromptLoop(items) abort
         break
       endif
     elseif s:Contains(['d', "\<c-d>"], l:char)
-      execute "normal! \<c-d>"
+      execute "normal! 4\<c-d>"
     elseif s:Contains(['u', "\<c-u>"], l:char)
-      execute "normal! \<c-u>"
+      execute "normal! 4\<c-u>"
+    elseif s:Contains(['f', "\<c-f>"], l:char)
+      " Don't use <c-f>, since it can scroll the menu off-screen.
+      execute "normal! 8\<c-d>"
+    elseif s:Contains(['b', "\<c-b>"], l:char)
+      " Don't use <c-b>, for consistency with not using <c-f>.
+      execute "normal! 8\<c-u>"
     elseif s:Contains(['{', '}'], l:char)
       " Can't execute '{' or '}' keypresses since lines with all whitespace
       " are included for showing scrollbars, but should be treated as if they
