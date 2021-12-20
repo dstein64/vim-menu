@@ -88,6 +88,7 @@ Name                 Default    Description
 `MenuNonTermIcon`      `Directory`  Color for non-terminal icon
 `MenuShortcut`         `ModeMsg`    Color for shortcut
 `MenuRightAlignedText` `MoreMsg`    Color for right-aligned text
+`MenuScrollbar`        `SignColumn` Color for scrollbar
 
 The highlight groups can be customized in your |.vimrc|, as shown in the
 following example.

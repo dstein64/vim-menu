@@ -49,6 +49,10 @@ function! menu#OnWsl()
   return 0
 endfunction
 
+function! s:NumberToFloat(number) abort
+  return a:number + 0.0
+endfunction
+
 " *************************************************
 " * Core
 " *************************************************
@@ -340,7 +344,8 @@ function! s:CreateMenu(parsed, path, id) abort
   let l:min_subname_pad = 3
   for l:item in l:items
     let l:id_pad = l:id_len - len(string(l:item.id))
-    let l:line = printf('%*s[%s] ', l:id_pad, '', l:item.id)
+    " The leading spaces are for the scrollbar.
+    let l:line = printf('  %*s[%s] ', l:id_pad, '', l:item.id)
     if l:item.is_leaf
       let l:symbol = g:menu_leaf_char
       let l:symbol_hl = 'MenuLeafIcon'
@@ -365,7 +370,10 @@ function! s:CreateMenu(parsed, path, id) abort
       call matchaddpos('MenuRightAlignedText', l:subname_pos)
       let l:line .= l:item.subname
     endif
-    if l:item.is_separator | let l:line = '' | endif
+    if l:item.is_separator
+      " Include spaces so the scrollbar is visible.
+      let l:line = ' '
+    endif
     if l:item.id ==# a:id | let l:selected_line = line('$') | endif
     call append(line('$') - 1, l:line)
   endfor
@@ -507,6 +515,38 @@ function! s:CreateShortcutLookup(items) abort
   return l:lookup
 endfunction
 
+" Returns a list with start line and height for scrollbar. Returns [-1, 0]
+" when there is no scrollbar.
+function! s:CalcScrollbarPosition() abort
+  let l:bufnr = bufnr()
+  let l:result = [-1, 0]
+  let l:line_count = line('$')
+  let l:topline = line('w0')
+  let l:botline = line('w$')
+  " Don't show the scrollbar when all lines are on screen.
+  if l:botline - l:topline + 1 ==# l:line_count
+    return l:result
+  endif
+  let l:winheight = winheight(0)
+  " l:top is the position for the top of the scrollbar, relative to the
+  " window, and 0-indexed.
+  let l:top = (l:topline - 1.0) / (l:line_count - 1)
+  let l:top = float2nr(round((l:winheight - 1) * l:top))
+  let l:height = s:NumberToFloat(l:winheight) / l:line_count
+  let l:height = float2nr(ceil(l:height * l:winheight))
+  let l:height = max([1, l:height])
+  " Make sure bar properly reflects bottom of document.
+  if l:botline ==# l:line_count
+    let l:top = l:winheight - l:height
+  endif
+  " Make sure bar never overlaps status line.
+  if l:top + l:height ># l:winheight
+    let l:top = l:winheight - l:height
+  endif
+  let l:result = [l:top + l:topline, l:height]
+  return l:result
+endfunction
+
 " Gets and processes user menu interactions (movements) and returns when an
 " action (exit, select, back) is taken.
 function! s:PromptLoop(items) abort
@@ -514,12 +554,25 @@ function! s:PromptLoop(items) abort
   let l:prompt = 'vim-menu> '
   let l:item_line_lookup = s:CreateItemLineLookup(a:items)
   let l:shortcut_lookup = s:CreateShortcutLookup(a:items)
+  let l:scrollbar_match_ids = []
   while 1
     sign unplace 1
     let l:line_before = line('.')
     let l:item = a:items[l:line_before - 1]
     execute printf('sign place 1 line=%s name=menu_selected buffer=%s',
           \ l:line_before, bufnr('%'))
+    for l:match_id in l:scrollbar_match_ids
+      call matchdelete(l:match_id)
+    endfor
+    let l:scrollbar_match_ids = []
+    let [l:scrollbar_row, l:scrollbar_height] = s:CalcScrollbarPosition()
+    if l:scrollbar_height ># 0
+      for l:line in range(l:scrollbar_row,
+            \ l:scrollbar_row + l:scrollbar_height - 1)
+        let l:match_id = matchaddpos('MenuScrollbar', [[l:line, 1]])
+        call add(l:scrollbar_match_ids, l:match_id)
+      endfor
+    endif
     redraw | echo l:prompt
     let l:char = s:GetChar()
     let l:code = char2nr(l:char)
@@ -551,11 +604,25 @@ function! s:PromptLoop(items) abort
         let l:action.selection = l:shortcut_lookup[l:lower]
         break
       endif
-    elseif l:char ==# 'd'
+    elseif s:Contains(['d', "\<c-d>"], l:char)
       execute "normal! \<c-d>"
-    elseif l:char ==# 'u'
+    elseif s:Contains(['u', "\<c-u>"], l:char)
       execute "normal! \<c-u>"
-    elseif s:Contains(['G', 'H', 'M', 'L', '{', '}'], l:char)
+    elseif s:Contains(['{', '}'], l:char)
+      " Can't execute '{' or '}' keypresses since lines with all whitespace
+      " are included for showing scrollbars, but should be treated as if they
+      " were empty.
+      let l:diff = l:char ==# '{' ? -1 : 1
+      let l:key = l:char ==# '{' ? 'k' : 'j'
+      while 1
+        let l:l = line('.')
+        execute 'silent! normal! ' . l:key
+        " Break if there was no movement.
+        if l:l ==# line('.') | break | endif
+        " Break if the line is empty.
+        if empty(trim(getline('.'))) | break | endif
+      endwhile
+    elseif s:Contains(['G', 'H', 'M', 'L'], l:char)
       execute 'normal! ' . l:char
     elseif l:char ==# 'K'
       call s:ShowItemInfo(l:item)
@@ -617,6 +684,8 @@ function! s:PrepMenuBufAndWin() abort
   setlocal bufhidden=hide
   setlocal nospell
   setlocal nolist
+  setlocal nowrap
+  setlocal colorcolumn=
 endfunction
 
 function! s:ShowError(msg) abort

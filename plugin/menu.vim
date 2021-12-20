@@ -41,6 +41,7 @@ highlight default link MenuLeafIcon WarningMsg
 highlight default link MenuNonTermIcon Directory
 highlight default link MenuShortcut ModeMsg
 highlight default link MenuRightAlignedText MoreMsg
+highlight default link MenuScrollbar SignColumn
 
 " The built-in Windows terminal emulator (used for CMD, Powershell, and WSL)
 " does not properly display the Unicode right-pointing triangle and diamond,
