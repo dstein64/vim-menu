@@ -304,6 +304,23 @@ function! s:MaxFullNameWidth(items) abort
   return l:max
 endfunction
 
+function! s:GetIcon() abort
+  let l:icon = ' '
+  if has('multi_byte') && &encoding ==# 'utf-8'
+    " Hamburger button
+    let l:icon = nr2char(0x2630)
+    " The built-in Windows terminal emulator (used for CMD, Powershell, and
+    " WSL) does not properly display the Unicode hamburger button, using the
+    " default font, Consolas. The character displays properly on Cygwin using
+    " its default font, Lucida Console, and also when using Consolas.
+    if has('win32') || menu#OnWsl()
+      " Triple bar
+      let l:icon = nr2char(0x2261)
+    endif
+  endif
+  return l:icon
+endfunction
+
 " Show the specified menu, with the specified item selected. 'matchadd' and
 " 'matchaddpos' are used for colorization. This is applied per-window, as
 " opposed to per-buffer. This is not a problem here since the window is only
@@ -319,20 +336,7 @@ function! s:CreateMenu(parsed, path, id) abort
   let l:items = s:FilterMenuItems(l:items, a:parsed[a:path].is_root)
   if len(l:items) ==# 0 | throw l:not_avail_err | endif
   let l:items = s:AttachId(l:items)
-  let l:title = join(l:parts, ' > ')
-  if has('multi_byte') && &encoding ==# 'utf-8'
-    " Hamburger button
-    let l:icon = nr2char(0x2630)
-    " The built-in Windows terminal emulator (used for CMD, Powershell, and
-    " WSL) does not properly display the Unicode hamburger button, using the
-    " default font, Consolas. The character displays properly on Cygwin using
-    " its default font, Lucida Console, and also when using Consolas.
-    if has('win32') || menu#OnWsl()
-      " Triple bar
-      let l:icon = nr2char(0x2261)
-    endif
-    let l:title = l:icon . ' ' . l:title
-  endif
+  let l:title = s:GetIcon() . ' ' . join(l:parts, ' > ')
   if len(l:title) ==# 0 | let l:title = ' ' | endif
   let &l:statusline = l:title
   " The last item can't be a separator, so don't have to handle the different
@@ -661,13 +665,24 @@ endfunction
 " Sets relevant global state and returns information for restoring the
 " existing state.
 function! s:Init()
-  let l:state = {'hlsearch': v:hlsearch}
+  let l:eventignore = &eventignore
+  set eventignore=all
+  let l:laststatus = &laststatus
+  set laststatus=2
+  let l:hlsearch = v:hlsearch
   let v:hlsearch = 0
+  let l:state = {
+        \   'eventignore': l:eventignore,
+        \   'laststatus': l:laststatus,
+        \   'hlsearch': l:hlsearch,
+        \ }
   return l:state
 endfunction
 
 function! s:Restore(state)
   let v:hlsearch = a:state['hlsearch']
+  let &laststatus = a:state['laststatus']
+  let &eventignore = a:state['eventignore']
 endfunction
 
 function! s:ClearBuffer() abort
