@@ -610,7 +610,7 @@ function! s:PromptLoop(items) abort
     elseif s:Contains(['u', "\<c-u>"], l:char)
       execute "normal! 4\<c-u>"
     elseif s:Contains(['f', "\<c-f>"], l:char)
-      " Don't use <c-f>, since it can scroll the menu off-screen.
+      " Don't use <c-f>, since it can scroll the menu to an invalid section.
       execute "normal! 8\<c-d>"
     elseif s:Contains(['b', "\<c-b>"], l:char)
       " Don't use <c-b>, for consistency with not using <c-f>.
@@ -629,8 +629,12 @@ function! s:PromptLoop(items) abort
         " Break if the line is empty.
         if empty(trim(getline('.'))) | break | endif
       endwhile
-    elseif s:Contains(['G', 'H', 'M', 'L'], l:char)
-      execute 'normal! ' . l:char
+    elseif s:Contains(['G', 'H', 'M', 'L', "\<c-e>", "\<c-y>"], l:char)
+      " Don't execute <c-e> if the last line is visible, since it would scroll
+      " the menu to an invalid section.
+      if l:char !=# "\<c-e>" || line('w$') !=# line('$')
+        execute 'normal! ' . l:char
+      endif
     elseif l:char ==# 'K'
       call s:ShowItemInfo(l:item)
     elseif l:char ==# '?'
