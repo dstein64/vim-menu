@@ -8,7 +8,7 @@ def s:BoolToInt(x: bool): number
   endif
 enddef
 
-# Given a menu item path (as a List), return its qualified name.
+# (documented in autoload/menu.vim)
 def s:Qualify(path: list<any>): string
   var path2 = path[:]
   map(path2, 'substitute(v:val, ''\.'', ''\\.'', "g")')
@@ -16,6 +16,7 @@ def s:Qualify(path: list<any>): string
   return join(path2, '.')
 enddef
 
+# (documented in autoload/menu.vim)
 def menu9#ParseMenu(mode: string): dict<any>
   var lines = split(execute(mode .. 'menu'), '\n')[1 :]
   map(lines, '"  " .. v:val')
