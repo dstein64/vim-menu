@@ -20,8 +20,13 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install lua-check neovim
-        # Install a backported version of Vim for its vim9script support.
-        sudo apt-get install vim/focal-backports
+        # Manually installing Vim is necessary until the repo version includes
+        # support for vim9script.
+        git clone https://github.com/vim/vim.git
+        cd vim
+        ./configure
+        make -j $(nproc)
+        sudo make -j $(nproc) install
 
     - name: Check Help Tags
       run: |
