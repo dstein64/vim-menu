@@ -19,9 +19,9 @@ noremenu Menu5&.Item2 :echo<cr>
 noremenu Menu&&&6.Item2 :echo<cr>
 noremenu Menu7&&&.Item2 :echo<cr>
 
-let s:menu_vimscript = funcref(menu#Sid() . 'ParseMenuVimScript')('n')
+let s:menu_vimscript = function(menu#Sid() . 'ParseMenuVimScript')('n')
 if has('nvim')
-  let s:menu_lua = funcref(menu#Sid() . 'ParseMenuLua')('n')
+  let s:menu_lua = function(menu#Sid() . 'ParseMenuLua')('n')
   call assert_equal(s:menu_vimscript, s:menu_lua)
 else
   let s:menu_vim9 = menu9#ParseMenu('n')
