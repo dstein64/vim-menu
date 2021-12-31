@@ -1,0 +1,108 @@
+vim9script
+
+def s:BoolToInt(x: bool): number
+  if x
+    return 1
+  else
+    return 0
+  endif
+enddef
+
+# Given a menu item path (as a List), return its qualified name.
+def s:Qualify(path: list<any>): string
+  var path2 = path[:]
+  map(path2, 'substitute(v:val, ''\.'', ''\\.'', "g")')
+  map(path2, 'substitute(v:val, " ", ''\\ '', "g")')
+  return join(path2, '.')
+enddef
+
+def menu9#ParseMenu(mode: string): dict<any>
+  var lines = split(execute(mode .. 'menu'), '\n')[1 :]
+  map(lines, '"  " .. v:val')
+  lines = ['0 '] + lines
+  var depth = -1
+  var output = {}
+  var stack: list<dict<any>> = [{'children': []}]
+  # Maps menu paths to the shortcuts for that menu. This is for detecting
+  # whether a shortcut is a duplicate.
+  var shortcut_lookup = {}
+  for idx in range(len(lines))
+    var line = lines[idx]
+    if line =~# '^ *\d'
+      var depth2 = len(matchstr(line, '^ *')) / 2
+      if depth2 <=# depth
+        for x in range(depth - depth2 + 1)
+          remove(stack, -1)
+        endfor
+      endif
+      var full_name = line[matchstrpos(line, ' *\d\+ ')[2] :]
+      var name: string
+      var subname: string
+      if match(full_name, '\^I') !=# -1
+        [name, subname] = split(full_name, '\^I')
+      else
+        [name, subname] = [full_name, '']
+      endif
+      # Temporarily replace double ampersands with DEL.
+      var special_char = 127  # <DEL>
+      if match(name, nr2char(special_char)) !=# -1
+        throw 'Unsupported menu'
+      endif
+      name = substitute(name, '&&', nr2char(special_char), 'g')
+      var amp_idx = match(name, '&')
+      name = substitute(name, '&', '', 'g')
+      var shortcut = ''
+      if amp_idx !=# -1
+        if amp_idx <# len(name)
+          var shortcut_code = strgetchar(name[amp_idx :], 0)
+          shortcut = tolower(nr2char(shortcut_code))
+        else
+          amp_idx = -1
+        endif
+      endif
+      # Restore double ampersands as single ampersands.
+      name = substitute(name, nr2char(special_char), '\&', 'g')
+      var is_separator = name =~# '^-.*-$'
+      var parents = []
+      for parent in stack[2 :]
+        add(parents, parent.name)
+      endfor
+      var is_leaf = idx + 1 < len(lines)
+            && lines[idx + 1] !~# '^ *\d'
+      var path = s:Qualify(parents + [name])
+      var parents_path = s:Qualify(parents)
+      if !has_key(shortcut_lookup, parents_path)
+        shortcut_lookup[parents_path] = {}
+      endif
+      var shortcuts = shortcut_lookup[parents_path]
+      var existing_shortcut = has_key(shortcuts, shortcut)
+      shortcuts[shortcut] = 1
+      var item = {
+        'name': name,
+        'subname': subname,
+        'path': path,
+        'amp_idx': amp_idx,
+        'shortcut': shortcut,
+        'existing_shortcut': s:BoolToInt(existing_shortcut),
+        'children': [],
+        'is_separator': s:BoolToInt(is_separator),
+        'is_root': s:BoolToInt(len(parents) ==# 0),
+        'is_leaf': s:BoolToInt(is_leaf)
+      }
+      add(stack[-1]['children'], item)
+      add(stack, item)
+      output[path] = item
+      depth = depth2
+    elseif line =~# '^ \+' .. mode
+      if has_key(stack[-1], 'mapping')
+        throw 'Mapping already exists.'
+      endif
+      var trimmed = trim(line)
+      var split_idx = match(trimmed, ' ')
+      var lhs = trimmed[: split_idx - 1]
+      var rhs = trim(trimmed[split_idx :])
+      stack[-1].mapping = [lhs, rhs]
+    endif
+  endfor
+  return output
+enddef

@@ -188,9 +188,12 @@ function! s:ParseMenu(mode) abort
   if has_key(s:, 'parse_cache_key') && l:parse_cache_key ==# s:parse_cache_key
     return s:parse_cache_val
   endif
+  " For improved speed, a Lua function is used for Neovim and a Vim9 function
+  " for Vim, when available.
   if has('nvim-0.4')
-    " A Lua function is used for its improved speed.
     let l:parsed = s:ParseMenuLua(a:mode)
+  elseif has('vim9script')
+    let l:parsed = menu9#ParseMenu(a:mode)
   else
     let l:parsed = s:ParseMenuVimScript(a:mode)
   endif
