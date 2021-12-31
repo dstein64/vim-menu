@@ -1,4 +1,5 @@
-" Test that menu parsing is consistent across VimScript, Lua, and Vim9.
+" Test that menu parsing is consistent across VimScript/Lua in Neovim and
+" VimScript/Vim9 in Vim.
 
 " Load the default menu, which would ordinarily be done when menu#Menu is
 " called, but that's not called here.
