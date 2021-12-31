@@ -25,8 +25,8 @@ jobs:
         git clone https://github.com/vim/vim.git
         cd vim
         ./configure
-        make
-        sudo make install
+        make -j $(nproc)
+        sudo make -j $(nproc) install
 
     - name: Check Help Tags
       run: |
