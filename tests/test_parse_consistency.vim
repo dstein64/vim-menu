@@ -1,4 +1,4 @@
-" Test that menu parsing is consistent across VimScript and Lua.
+" Test that menu parsing is consistent across VimScript, Lua, and Vim9.
 
 " Load the default menu, which would ordinarily be done when menu#Menu is
 " called, but that's not called here.
