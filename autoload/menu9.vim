@@ -10,7 +10,7 @@ enddef
 
 # (documented in autoload/menu.vim)
 def s:Qualify(path: list<any>): string
-  var path2 = path[:]
+  final path2 = path[:]
   map(path2, 'substitute(v:val, ''\.'', ''\\.'', "g")')
   map(path2, 'substitute(v:val, " ", ''\\ '', "g")')
   return join(path2, '.')
@@ -22,11 +22,11 @@ def menu9#ParseMenu(mode: string): dict<any>
   map(lines, '"  " .. v:val')
   lines = ['0 '] + lines
   var depth = -1
-  var output = {}
-  var stack: list<dict<any>> = [{'children': []}]
+  final output = {}
+  final stack: list<dict<any>> = [{'children': []}]
   # Maps menu paths to the shortcuts for that menu. This is for detecting
   # whether a shortcut is a duplicate.
-  var shortcut_lookup = {}
+  final shortcut_lookup = {}
   for idx in range(len(lines))
     const line = lines[idx]
     if line =~# '^ *\d'
@@ -78,7 +78,7 @@ def menu9#ParseMenu(mode: string): dict<any>
       const shortcuts = shortcut_lookup[parents_path]
       const existing_shortcut = has_key(shortcuts, shortcut)
       shortcuts[shortcut] = 1
-      var item = {
+      final item = {
         'name': name,
         'subname': subname,
         'path': path,
