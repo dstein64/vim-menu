@@ -28,15 +28,15 @@ def menu9#ParseMenu(mode: string): dict<any>
   # whether a shortcut is a duplicate.
   var shortcut_lookup = {}
   for idx in range(len(lines))
-    var line = lines[idx]
+    const line = lines[idx]
     if line =~# '^ *\d'
-      var depth2 = len(matchstr(line, '^ *')) / 2
+      const depth2 = len(matchstr(line, '^ *')) / 2
       if depth2 <=# depth
         for x in range(depth - depth2 + 1)
           remove(stack, -1)
         endfor
       endif
-      var full_name = line[matchstrpos(line, ' *\d\+ ')[2] :]
+      const full_name = line[matchstrpos(line, ' *\d\+ ')[2] :]
       var name: string
       var subname: string
       if match(full_name, '\^I') !=# -1
@@ -45,7 +45,7 @@ def menu9#ParseMenu(mode: string): dict<any>
         [name, subname] = [full_name, '']
       endif
       # Temporarily replace double ampersands with DEL.
-      var special_char = 127  # <DEL>
+      const special_char = 127  # <DEL>
       if match(name, nr2char(special_char)) !=# -1
         throw 'Unsupported menu'
       endif
@@ -55,7 +55,7 @@ def menu9#ParseMenu(mode: string): dict<any>
       var shortcut = ''
       if amp_idx !=# -1
         if amp_idx <# len(name)
-          var shortcut_code = strgetchar(name[amp_idx :], 0)
+          const shortcut_code = strgetchar(name[amp_idx :], 0)
           shortcut = tolower(nr2char(shortcut_code))
         else
           amp_idx = -1
@@ -63,20 +63,20 @@ def menu9#ParseMenu(mode: string): dict<any>
       endif
       # Restore double ampersands as single ampersands.
       name = substitute(name, nr2char(special_char), '\&', 'g')
-      var is_separator = name =~# '^-.*-$'
-      var parents = []
+      const is_separator = name =~# '^-.*-$'
+      const parents = []
       for parent in stack[2 :]
         add(parents, parent.name)
       endfor
-      var is_leaf = idx + 1 < len(lines)
+      const is_leaf = idx + 1 < len(lines)
             && lines[idx + 1] !~# '^ *\d'
-      var path = s:Qualify(parents + [name])
-      var parents_path = s:Qualify(parents)
+      const path = s:Qualify(parents + [name])
+      const parents_path = s:Qualify(parents)
       if !has_key(shortcut_lookup, parents_path)
         shortcut_lookup[parents_path] = {}
       endif
-      var shortcuts = shortcut_lookup[parents_path]
-      var existing_shortcut = has_key(shortcuts, shortcut)
+      const shortcuts = shortcut_lookup[parents_path]
+      const existing_shortcut = has_key(shortcuts, shortcut)
       shortcuts[shortcut] = 1
       var item = {
         'name': name,
@@ -98,10 +98,10 @@ def menu9#ParseMenu(mode: string): dict<any>
       if has_key(stack[-1], 'mapping')
         throw 'Mapping already exists.'
       endif
-      var trimmed = trim(line)
-      var split_idx = match(trimmed, ' ')
-      var lhs = trimmed[: split_idx - 1]
-      var rhs = trim(trimmed[split_idx :])
+      const trimmed = trim(line)
+      const split_idx = match(trimmed, ' ')
+      const lhs = trimmed[: split_idx - 1]
+      const rhs = trim(trimmed[split_idx :])
       stack[-1].mapping = [lhs, rhs]
     endif
   endfor
