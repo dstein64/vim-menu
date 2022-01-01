@@ -64,7 +64,7 @@ def menu9#ParseMenu(mode: string): dict<dict<any>>
       # Restore double ampersands as single ampersands.
       name = substitute(name, nr2char(special_char), '\&', 'g')
       const is_separator = name =~# '^-.*-$'
-      const parents = []
+      final parents = []
       for parent in stack[2 :]
         add(parents, parent.name)
       endfor
