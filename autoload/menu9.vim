@@ -9,7 +9,7 @@ def s:BoolToInt(x: bool): number
 enddef
 
 # (documented in autoload/menu.vim)
-def s:Qualify(path: list<any>): string
+def s:Qualify(path: list<string>): string
   final path2 = path[:]
   map(path2, 'substitute(v:val, ''\.'', ''\\.'', "g")')
   map(path2, 'substitute(v:val, " ", ''\\ '', "g")')
@@ -17,7 +17,7 @@ def s:Qualify(path: list<any>): string
 enddef
 
 # (documented in autoload/menu.vim)
-def menu9#ParseMenu(mode: string): dict<any>
+def menu9#ParseMenu(mode: string): dict<dict<any>>
   var lines = split(execute(mode .. 'menu'), '\n')[1 :]
   map(lines, '"  " .. v:val')
   lines = ['0 '] + lines
