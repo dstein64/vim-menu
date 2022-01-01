@@ -13,6 +13,9 @@ let s:code0 = char2nr('0')
 let s:code1 = char2nr('1')
 let s:code9 = char2nr('9')
 
+let s:nvim_lua = has('nvim-0.4')
+let s:vim9script = has('vim9script')
+
 " Action types for PromptLoop()
 let s:exit_action = 1
 let s:select_action = 2
@@ -190,9 +193,9 @@ function! s:ParseMenu(mode) abort
   endif
   " For improved speed, a Lua function is used for Neovim and a Vim9 function
   " for Vim, when available.
-  if has('nvim-0.4')
+  if s:nvim_lua
     let l:parsed = s:ParseMenuLua(a:mode)
-  elseif has('vim9script')
+  elseif s:vim9script
     let l:parsed = menu9#ParseMenu(a:mode)
   else
     let l:parsed = s:ParseMenuVimScript(a:mode)
