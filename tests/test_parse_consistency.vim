@@ -18,12 +18,12 @@ noremenu Me&nu4&.Item1 :echo<cr>
 noremenu Menu5&.Item2 :echo<cr>
 noremenu Menu&&&6.Item2 :echo<cr>
 noremenu Menu7&&&.Item2 :echo<cr>
+noremenu <silent> Menu8.Item1<tab>x<tab> :echo<cr>
 
 let s:menu_vimscript = function(menu#Sid() . 'ParseMenuVimScript')('n')
 if has('nvim')
-  let s:menu_lua = function(menu#Sid() . 'ParseMenuLua')('n')
-  call assert_equal(s:menu_vimscript, s:menu_lua)
+  let s:menu_opt = function(menu#Sid() . 'ParseMenuLua')('n')
 else
-  let s:menu_vim9 = menu9#ParseMenu('n')
-  call assert_equal(s:menu_vimscript, s:menu_vim9)
+  let s:menu_opt = menu9#ParseMenu('n')
 endif
+call assert_equal(s:menu_vimscript, s:menu_opt)
