@@ -39,8 +39,13 @@ def menu9#ParseMenu(mode: string): dict<dict<any>>
       const full_name = line[matchstrpos(line, ' *\d\+ ')[2] :]
       var name: string
       var subname: string
-      if match(full_name, '\^I') !=# -1
-        [name, subname] = split(full_name, '\^I')
+      const tab_idx = match(full_name, '\^I')
+      if tab_idx !=# -1
+        name = ''
+        if tab_idx ># 0
+          name = full_name[: tab_idx - 1]
+        endif
+        subname = full_name[tab_idx + 2 :]
       else
         [name, subname] = [full_name, '']
       endif

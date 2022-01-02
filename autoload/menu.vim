@@ -105,8 +105,13 @@ function! s:ParseMenuVimScript(mode) abort
         endfor
       endif
       let l:full_name = l:line[matchstrpos(l:line, ' *\d\+ ')[2]:]
-      if match(l:full_name, '\^I') !=# -1
-        let [l:name, l:subname] = split(l:full_name, '\^I')
+      let l:tab_idx = match(l:full_name, '\^I')
+      if l:tab_idx !=# -1
+        let l:name = ''
+        if l:tab_idx ># 0
+          let l:name = l:full_name[:l:tab_idx - 1]
+        endif
+        let l:subname = l:full_name[l:tab_idx + 2:]
       else
         let [l:name, l:subname] = [l:full_name, '']
       endif

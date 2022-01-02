@@ -18,7 +18,7 @@ noremenu Me&nu4&.Item1 :echo<cr>
 noremenu Menu5&.Item2 :echo<cr>
 noremenu Menu&&&6.Item2 :echo<cr>
 noremenu Menu7&&&.Item2 :echo<cr>
-noremenu <silent> Menu8.Item1<tab>x<tab> :echo<cr>
+noremenu Menu8.Item1<tab>x<tab> :echo<cr>
 
 let s:menu_vimscript = function(menu#Sid() . 'ParseMenuVimScript')('n')
 if has('nvim')
