@@ -41,7 +41,7 @@ lazy-load the menus.
 	" The following can be added in your .vimrc to manually load Vim menus.
 	silent! source $VIMRUNTIME/menu.vim
 	" ...which can be followed by :unmenu commands to remove items.
-                                                               *:Menu*
+<                                                               *:Menu*
 Enter |vim-menu| with `<leader>m` or |:Menu|. These will not be clobbered in
 case they are already used.
 
