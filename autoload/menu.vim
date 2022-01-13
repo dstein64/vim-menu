@@ -707,7 +707,11 @@ function! s:PrepMenuBufAndWin() abort
   if s:bufnr ==# 0 || !buffer_exists(s:bufnr)
     let s:bufnr = bufadd('')
   endif
-  execute 'silent! botright split +' . s:bufnr . 'buffer'
+  let l:pos = 'botright'
+  if get(g:, 'menu_position') ==# 'top'
+    let l:pos = 'topleft'
+  endif
+  execute 'silent! ' . l:pos . ' split +' . s:bufnr . 'buffer'
   setlocal buftype=nofile
   setlocal noswapfile
   setlocal nofoldenable

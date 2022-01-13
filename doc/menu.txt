@@ -74,6 +74,9 @@ The following variables can be used to customize the behavior of |vim-menu|.
   Whether caching is used for
   quicker loading, at the cost of
   higher memory usage.
+*g:menu_position*                     `bottom`
+  The menu position. Possible
+  values are `top` or `bottom`.
 
 Color Customization ~
                                            *menu-color-customization*

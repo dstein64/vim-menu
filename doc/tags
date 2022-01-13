@@ -2,6 +2,7 @@
 g:menu_caching	menu.txt	/*g:menu_caching*
 g:menu_leaf_char	menu.txt	/*g:menu_leaf_char*
 g:menu_nonterm_char	menu.txt	/*g:menu_nonterm_char*
+g:menu_position	menu.txt	/*g:menu_position*
 menu-color-customization	menu.txt	/*menu-color-customization*
 menu-configuration	menu.txt	/*menu-configuration*
 menu-installation	menu.txt	/*menu-installation*
