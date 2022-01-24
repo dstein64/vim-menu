@@ -212,7 +212,7 @@ function! s:ParseMenu(mode) abort
   return l:parsed
 endfunction
 
-" Returns true if all leaves under an item are disabled or <Nop>.
+" Returns true if all leaves under an item are disabled.
 function! s:IsDisabled(item) abort
   let l:mappings = []
   let l:stack = [a:item]
@@ -220,7 +220,7 @@ function! s:IsDisabled(item) abort
     let l:candidate = remove(l:stack, -1)
     if l:candidate.is_leaf
       let l:mapping = l:candidate.mapping
-      let l:disabled = mapping[0] =~# '-' || mapping[1] ==# '<Nop>'
+      let l:disabled = mapping[0] =~# '-'
       if !l:disabled | return 0 | endif
     else
       call extend(l:stack, l:candidate.children)
@@ -236,7 +236,7 @@ function! s:FilterMenuItems(items, root) abort
     call filter(l:items, 'index(s:root_exclusions, v:val.name) ==# -1')
   endif
   " Exlude non-separator entries that only have <Nop> subitems.
-  call filter(l:items, 'v:val.is_separator || !s:IsDisabled(v:val)')
+  call filter(l:items, '!s:IsDisabled(v:val)')
   " Drop consecutive separators and separators on the boundary.
   let l:items2 = []
   let l:len = len(l:items)
