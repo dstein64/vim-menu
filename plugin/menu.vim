@@ -48,7 +48,9 @@ highlight default link MenuScrollbar SignColumn
 " using the default font, Consolas. The characters display properly on Cygwin
 " using its default font, Lucida Console, and also when using Consolas.
 let s:win_term = has('win32') || menu#OnWsl()
-if !s:win_term && has('multi_byte') && &encoding ==# 'utf-8'
+" On gVim, the triangle and diamond characters are truncated (Issue #3).
+let s:gvim = has('gui_running') && v:progname =~# '^gvim'
+if !s:win_term && !s:gvim && has('multi_byte') && &encoding ==# 'utf-8'
   " Right-pointing triangle
   let s:default_nonterm_char = nr2char(0x25B6)
   " Diamond
