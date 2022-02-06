@@ -17,7 +17,7 @@ def s:Qualify(path: list<string>): string
 enddef
 
 # (documented in autoload/menu.vim)
-def menu9#ParseMenu(mode: string): dict<dict<any>>
+export def ParseMenu(mode: string): dict<dict<any>>
   var lines = split(execute(mode .. 'menu'), '\n')[1 :]
   map(lines, '"  " .. v:val')
   lines = ['0 '] + lines
