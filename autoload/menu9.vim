@@ -1,6 +1,6 @@
 vim9script
 
-def s:BoolToInt(x: bool): number
+def BoolToInt(x: bool): number
   if x
     return 1
   else
@@ -9,7 +9,7 @@ def s:BoolToInt(x: bool): number
 enddef
 
 # (documented in autoload/menu.vim)
-def s:Qualify(path: list<string>): string
+def Qualify(path: list<string>): string
   final path2 = path[:]
   map(path2, 'substitute(v:val, ''\.'', ''\\.'', "g")')
   map(path2, 'substitute(v:val, " ", ''\\ '', "g")')
@@ -75,8 +75,8 @@ export def ParseMenu(mode: string): dict<dict<any>>
       endfor
       const is_leaf = idx + 1 < len(lines)
             && lines[idx + 1] !~# '^ *\d'
-      const path = s:Qualify(parents + [name])
-      const parents_path = s:Qualify(parents)
+      const path = Qualify(parents + [name])
+      const parents_path = Qualify(parents)
       if !has_key(shortcut_lookup, parents_path)
         shortcut_lookup[parents_path] = {}
       endif
@@ -89,11 +89,11 @@ export def ParseMenu(mode: string): dict<dict<any>>
         'path': path,
         'amp_idx': amp_idx,
         'shortcut': shortcut,
-        'existing_shortcut': s:BoolToInt(existing_shortcut),
+        'existing_shortcut': BoolToInt(existing_shortcut),
         'children': [],
-        'is_separator': s:BoolToInt(is_separator),
-        'is_root': s:BoolToInt(len(parents) ==# 0),
-        'is_leaf': s:BoolToInt(is_leaf)
+        'is_separator': BoolToInt(is_separator),
+        'is_root': BoolToInt(len(parents) ==# 0),
+        'is_leaf': BoolToInt(is_leaf)
       }
       add(stack[-1]['children'], item)
       add(stack, item)
