@@ -14,7 +14,7 @@ let s:code1 = char2nr('1')
 let s:code9 = char2nr('9')
 
 let s:nvim_lua = has('nvim-0.4')
-let s:vim9script = has('vim9script')
+let s:vim9script = has('vim9script') && has('patch-8.2.4053')
 
 " Action types for PromptLoop()
 let s:exit_action = 1
