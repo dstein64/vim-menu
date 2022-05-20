@@ -8,6 +8,15 @@ local fn = setmetatable({}, {
   end
 })
 
+-- The table.foreach built-in can run slowly, so implement a version manually.
+--   https://github.com/neovim/neovim/issues/18644
+--   https://github.com/LuaJIT/LuaJIT/issues/844
+local foreach = function(tbl, f)
+  for k, v in pairs(tbl) do
+    f(k, v)
+  end
+end
+
 local bool_to_int = function(bool)
   if bool then
     return 1
@@ -19,10 +28,10 @@ end
 -- (documented in autoload/menu.vim)
 local qualify = function(path)
   path = vim.deepcopy(path)
-  table.foreach(path, function(k, v)
+  foreach(path, function(k, v)
     path[k] = v:gsub('%.', '\\%.')
   end)
-  table.foreach(path, function(k, v)
+  foreach(path, function(k, v)
     path[k] = v:gsub(' ', '\\ ')
   end)
   return table.concat(path, '.')
@@ -31,7 +40,7 @@ end
 -- (documented in autoload/menu.vim)
 local parse_menu = function(mode)
   local lines = {unpack(fn.split(fn.execute(mode .. 'menu'), '\n'), 2)}
-  table.foreach(lines, function(k, v) lines[k] = '  ' .. v end)
+  foreach(lines, function(k, v) lines[k] = '  ' .. v end)
   lines = {'0 ', unpack(lines)}
   local depth = -1
   local output = {}
