@@ -680,12 +680,19 @@ function! s:Init()
   set eventignore=all
   let l:laststatus = &laststatus
   set laststatus=2
+  let l:cmdheight = &cmdheight
+  if l:cmdheight ==# 0
+    " Neovim supports cmdheight=0. When used, temporarily change to 1 to avoid
+    " 'Press ENTER or type command to continue' after using the plugin.
+    set cmdheight=1
+  endif
   let l:hlsearch = v:hlsearch
   let v:hlsearch = 0
   let l:state = {
         \   'eventignore': l:eventignore,
         \   'laststatus': l:laststatus,
         \   'hlsearch': l:hlsearch,
+        \   'cmdheight': l:cmdheight,
         \ }
   return l:state
 endfunction
@@ -693,6 +700,7 @@ endfunction
 function! s:Restore(state)
   let v:hlsearch = a:state['hlsearch']
   let &laststatus = a:state['laststatus']
+  let &cmdheight = a:state['cmdheight']
   let &eventignore = a:state['eventignore']
 endfunction
 
@@ -827,9 +835,9 @@ function! menu#Menu(path, range_count, view) range abort
     close
     " Return to the initial window from prior to loading menu.
     call win_gotoid(l:prior_winid)
-    call s:Restore(l:state)
     echohl None
     redraw | echo ''
+    call s:Restore(l:state)
   endtry
   if !get(l:, 'error', 0)
     if exists('l:pending')
