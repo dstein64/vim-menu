@@ -679,7 +679,9 @@ function! s:Init()
   let l:eventignore = &eventignore
   set eventignore=all
   let l:laststatus = &laststatus
-  if !s:Contains([2, 3], l:laststatus)
+  if has('nvim') && l:laststatus ==# 3
+    " Keep the existing value
+  else
     set laststatus=2
   endif
   let l:cmdheight = &cmdheight
