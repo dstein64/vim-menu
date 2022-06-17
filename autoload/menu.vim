@@ -679,7 +679,9 @@ function! s:Init()
   let l:eventignore = &eventignore
   set eventignore=all
   let l:laststatus = &laststatus
-  set laststatus=2
+  if !s:Contains([2, 3], l:laststatus)
+    set laststatus=2
+  endif
   let l:cmdheight = &cmdheight
   if l:cmdheight ==# 0
     " Neovim supports cmdheight=0. When used, temporarily change to 1 to avoid
