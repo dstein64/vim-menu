@@ -61,9 +61,11 @@ See `:help menu-usage` for additional details.
 
 The underlying markup is in [menu.txt](doc/menu.txt).
 
-## Demo
+<details open><summary><h2>Demo</h2></summary>
 
 <img src="screencast.gif?raw=true" width="825"/>
+
+</details>
 
 License
 -------
