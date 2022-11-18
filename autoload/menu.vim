@@ -235,7 +235,7 @@ function! s:FilterMenuItems(items, root) abort
   if a:root
     call filter(l:items, 'index(s:root_exclusions, v:val.name) ==# -1')
   endif
-  " Exlude non-separator entries that only have <Nop> subitems.
+  " Exclude non-separator entries that only have <Nop> subitems.
   call filter(l:items, '!s:IsDisabled(v:val)')
   " Drop consecutive separators and separators on the boundary.
   let l:items2 = []
@@ -782,7 +782,7 @@ function! menu#Menu(path, range_count, view) range abort
   let l:prior_winid = win_getid()
   let l:state = s:Init()
   call s:PrepMenuBufAndWin()
-  " The lines above are intentially left outside the try block, so that
+  " The lines above are intentionally left outside the try block, so that
   " assumptions in the catch and finally blocks are satisfied.
   try
     echohl None
@@ -855,7 +855,7 @@ function! menu#Menu(path, range_count, view) range abort
     elseif a:range_count ># 0
       " If no command was executed (i.e., exit action or back action out of
       " menu), and the user had a visual selection (assumed by positive
-      " range_count), restore the visual selection. This is intentially not
+      " range_count), restore the visual selection. This is intentionally not
       " executed on error (some steps leading up to error may have been
       " executed, whereby visual selection would not ordinarily be restored
       " even in the absence of an error).
