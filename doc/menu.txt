@@ -70,7 +70,7 @@ The following variables can be used to customize the behavior of |vim-menu|.
 *g:menu_leaf_char*                    `Diamond` when assumed available and
   Character to show for leaf menu   `asterisk` otherwise
   items.
-*g:menu_caching*                      `1`
+*g:menu_caching*                      |v:true|
   Whether caching is used for
   quicker loading, at the cost of
   higher memory usage.
