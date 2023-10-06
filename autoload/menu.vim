@@ -694,11 +694,18 @@ function! s:Init()
   endif
   let l:hlsearch = v:hlsearch
   let v:hlsearch = 0
+  let l:winbar = v:null
+  if exists('&winbar')
+    " Turn off the winbar. This can't be disabled just for the menu window.
+    let l:winbar = &winbar
+    set winbar=
+  endif
   let l:state = {
         \   'eventignore': l:eventignore,
         \   'laststatus': l:laststatus,
         \   'hlsearch': l:hlsearch,
         \   'cmdheight': l:cmdheight,
+        \   'winbar': l:winbar,
         \ }
   return l:state
 endfunction
@@ -707,6 +714,9 @@ function! s:Restore(state)
   let v:hlsearch = a:state['hlsearch']
   let &laststatus = a:state['laststatus']
   let &cmdheight = a:state['cmdheight']
+  if a:state['winbar'] !=# v:null
+    let &winbar = a:state['winbar']
+  endif
   let &eventignore = a:state['eventignore']
 endfunction
 
