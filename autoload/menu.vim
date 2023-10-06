@@ -741,6 +741,70 @@ function! s:PrepMenuBufAndWin() abort
   setlocal colorcolumn=
 endfunction
 
+" Hide Neovim floating windows or Vim popups overlapping with the specified
+" top and bottom screen lines (1-based). Returns a list of windows that were
+" hidden. Requires a version of Neovim or Vim with float/popup hiding
+" functionality.
+function! s:HideFloats(top, bottom) abort
+  let l:result = []
+  if exists('*nvim_win_get_config')
+    " Handle Neovim floating windows.
+    for l:winnr in range(1, winnr('$'))
+      let l:winid = win_getid(l:winnr)
+      let l:config = nvim_win_get_config(l:winid)
+      let l:float = l:config.relative != '' && !l:config.external
+      if l:float && has_key(l:config, 'hide') && !l:config.hide
+        let l:wininfo = getwininfo(l:winid)[0]
+        let l:float_top = l:wininfo.winrow
+        let l:float_bottom = l:float_top
+              \ + l:wininfo.height - 1
+              \ + get(l:wininfo, 'winbar', 0)
+        let l:border = get(l:config, 'border', repeat([''], 8))
+        if len(l:border) ==# 8 && l:border[1] !=# ''
+          " There is a top border.
+          let l:float_bottom += 1
+        endif
+        if len(l:border) ==# 8 && l:border[5] !=# ''
+          " There is a bottom border.
+          let l:float_bottom += 1
+        endif
+        if l:float_bottom >=# a:top && l:float_top <=# a:bottom
+          call nvim_win_set_config(l:winid, {'hide': v:true})
+          call add(l:result, l:winid)
+        endif
+      endif
+    endfor
+  elseif has('popupwin')
+    " Handle Vim popup windows.
+    for l:winid in popup_list()
+      let l:popup_pos = popup_getpos(l:winid)
+      let l:popup_top = l:popup_pos.line
+      let l:popup_bottom = l:popup_pos.line + l:popup_pos.height - 1
+      if l:popup_pos.visible
+            \ && l:popup_bottom >=# a:top
+            \ && l:popup_top <=# a:bottom
+        call popup_hide(l:winid)
+        call add(l:result, l:winid)
+      endif
+    endfor
+  endif
+  return l:result
+endfunction
+
+" Unhides the specified windows.
+function! s:UnhideWindows(winids) abort
+  for l:winid in a:winids
+    if exists('*nvim_win_set_config')
+      call nvim_win_set_config(l:winid, {'hide': v:false})
+    elseif has('popupwin')
+      call popup_show(l:winid)
+    else
+      let l:msg = 'vim-menu: Unable to show hidden windows.'
+      call s:ShowError(l:msg)
+    endif
+  endfor
+endfunction
+
 function! s:ShowError(msg) abort
   call s:Beep()
   echohl ErrorMsg
@@ -780,6 +844,7 @@ function! menu#Menu(path, range_count, view) range abort
     return
   endif
   let l:prior_winid = win_getid()
+  let l:hidden_winids = []
   let l:state = s:Init()
   call s:PrepMenuBufAndWin()
   " The lines above are intentionally left outside the try block, so that
@@ -798,6 +863,13 @@ function! menu#Menu(path, range_count, view) range abort
     while 1
       call s:ClearBuffer()
       let l:items = s:CreateMenu(l:parsed, l:path, l:selection_id)
+      call s:UnhideWindows(l:hidden_winids)
+      " Hide overlapping floating windows for the duration of processing, to
+      " prevent overlapping the menu window.
+      let l:wininfo = getwininfo(win_getid(winnr()))[0]
+      let l:top = l:wininfo.winrow
+      let l:bottom = l:top + l:wininfo.height + get(l:wininfo, 'winbar', 0)
+      let l:hidden_winids = s:HideFloats(l:top, l:bottom)
       let l:action = s:PromptLoop(l:items)
       if l:action.type ==# s:exit_action
         break
@@ -841,6 +913,7 @@ function! menu#Menu(path, range_count, view) range abort
     call win_gotoid(l:prior_winid)
     echohl None
     redraw | echo ''
+    call s:UnhideWindows(l:hidden_winids)
     call s:Restore(l:state)
   endtry
   if !get(l:, 'error', 0)
