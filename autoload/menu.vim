@@ -396,7 +396,9 @@ function! s:CreateMenu(parsed, path, id) abort
   call matchadd('MenuID', '^ *\zs\[\d\+\]\ze')
   $delete _
   normal! gg
-  execute 'resize ' . line('$')
+  let l:wininfo = getwininfo(win_getid(winnr()))[0]
+  let l:height = line('$') + get(l:wininfo, 'winbar', 0)
+  execute 'resize ' . l:height
   execute 'normal! ' . l:selected_line . 'G'
   return l:items
 endfunction
