@@ -764,7 +764,7 @@ function! s:HideFloats(top, bottom) abort
     for l:winnr in range(1, winnr('$'))
       let l:winid = win_getid(l:winnr)
       let l:config = nvim_win_get_config(l:winid)
-      let l:float = l:config.relative != '' && !l:config.external
+      let l:float = l:config.relative !=# '' && !l:config.external
       if l:float && has_key(l:config, 'hide') && !l:config.hide
         let l:wininfo = getwininfo(l:winid)[0]
         let l:float_top = l:wininfo.winrow
