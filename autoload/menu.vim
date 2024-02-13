@@ -714,7 +714,7 @@ function! s:Restore(state)
   let v:hlsearch = a:state['hlsearch']
   let &laststatus = a:state['laststatus']
   let &cmdheight = a:state['cmdheight']
-  if a:state['winbar'] !=# v:null
+  if a:state['winbar'] isnot# v:null
     let &winbar = a:state['winbar']
   endif
   let &eventignore = a:state['eventignore']
