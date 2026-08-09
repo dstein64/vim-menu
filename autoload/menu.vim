@@ -761,8 +761,7 @@ function! s:HideFloats(top, bottom) abort
   let l:result = []
   if exists('*nvim_win_get_config')
     " Handle Neovim floating windows.
-    for l:winnr in range(1, winnr('$'))
-      let l:winid = win_getid(l:winnr)
+    for l:winid in nvim_tabpage_list_wins(0)
       let l:config = nvim_win_get_config(l:winid)
       let l:float = l:config.relative !=# '' && !l:config.external
       if l:float && has_key(l:config, 'hide') && !l:config.hide
